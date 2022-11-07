@@ -5,9 +5,10 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Bible search tool</title>
         <STYLE type="text/css">
+
         @font-face {
             font-family: "Code New Roman";
-            src: url("Code New Roman.woff") format("truetype");
+            src: url("Code New Roman.woff");
         }
 
         * {
@@ -93,18 +94,22 @@
                     # Reverse order is also supported (eg. Genesis 1:2-1 becomes Genesis 1:1; Genesis 1:2)
                     foreach(explode(";", $search_for) as &$search) {
 
-                        # only support one book:verse#-verse# range per group
-                        # support one or more comma separated verses
+                        # support one "book#:verse#-verse#" or "book#:verse#,verse#,verse#" range per group
                         if (preg_match_all("/[0-9]+:[0-9]+-[0-9]+/", $search) == 1 || preg_match_all("/[0-9]+:[0-9]+,[0-9]+/", $search) >= 1) {
 
                             # per group, ranges and commas together are not supported
-                            if (strpos($search, "-") !== false && strpos($search, ",")) {
-                                echo "Warning: Only one range \"-\" or comma \",\" per group is supported ($search)<BR>";
+                            if (strpos($search, "-") !== false && strpos($search, ",") !== false) {
+                                echo "Ranges \"-\" and commas \",\" cannot be combined ($search)<BR>";
                                 continue;
                             }
 
                             # process ranges specified using a dash "-" (eg. Genesis 1:1-12)
-                            if (strpos($search, "-") !==false) {
+                            if (strpos($search, "-") !== false) {
+
+                                # Get the book name and book number
+                                $book = substr($search, 0, strpos($search, ":"));
+                                $book_num = substr($book, strrpos($book, " "));
+                                $book = substr($book, 0, strrpos($book, " "));
 
                                 # expand ranges
                                 $range = substr($search, strpos($search, ":"));
@@ -119,17 +124,6 @@
                                 # add the expanded range to the string of search criteria
                                 # eg. Psalm 150:1-3 => Psalm 150:1; Psalm 150:2; Psalm 150:3
                                 foreach (range($range[0], $range[1]) as $number) {
-
-                                    # Step 1 Return a portion of $search starting from the beginning and ending at the first colon encountered from the beginning
-                                    $book = substr($search, 0, strpos($search, ":"));
-
-                                    # From here we can more easily grab the book number
-                                    # Return a portion of $book beginning from the end and ending at the first colon from the beginning
-                                    $book_num = substr($book, strrpos($book, " "), strpos($search, ":"));
-
-                                    # Step 2 Return a portion of $book starting at the beginning and ending at first space encountered starting from the end
-                                    $book = substr($book, 0, strrpos($book, " "));
-
                                     # append the new entry to the string that will become the array of search criteria
                                     $search_for .= ";$book $book_num:$number";
                                 }
@@ -139,7 +133,7 @@
 
                                 # Get the book name and book number
                                 $book = substr($search, 0, strpos($search, ":"));
-                                $book_num = substr($book, strrpos($book, " "), strpos($search, ":"));
+                                $book_num = substr($book, strrpos($book, " "));
                                 $book = substr($book, 0, strrpos($book, " "));
 
                                 # expand comma seperated verses and append them to the search array
@@ -158,7 +152,8 @@
 
                     # turn the search criteria into an array, splitting at the semi-colons
                     $search_array = explode(";", $search_for);
-                    unset($search_for); # just in case
+
+                    unset($search_for, $book, $book_num, $pos, $range); # just in case
 
                     # open the file of the text to search read only
                     $handle = @fopen($bible_text, "r");
@@ -166,7 +161,7 @@
                     # Counter for lines that match search criteria
                     $match_count = 0;
 
-                    $verse_min = 99999;
+                    #$verse_min = 99999;
 
                     if ($handle) {
 
@@ -176,10 +171,20 @@
                             # if the line is empty or contains only a newline, skip it
                             if ($line == "" || $line == "\n") { continue; } # just in case
 
+                            # Get book name and book number
+                            # Step 1 Return a portion of $search starting from the beginning and ending at the first colon encountered from the beginning
+                            $book = substr($line, 0, strpos($line, ":"));
+                            # Return a portion of $book beginning at the first space found starting from the end and ending at the first colon from the beginning
+                            $book_num = substr($book, strrpos($book, " ")); # From here we can more easily grab the book number
+                            # Step 2 Return a portion of $book starting at the beginning and ending at the first space encountered from the end
+                            $book = substr($book, 0, strrpos($book, " "));
+
+                            /*
+                            # WIP feature
                             # Get the verse text by itself
                             $verse = substr($line, strpos($line, ":"));
                             $verse = substr($verse, strpos($verse, " "));
-                            # remove brackets
+                            # remove brackets (Cambridge version uses them to show where original italics were)
                             $verse = preg_replace("/[\[\]]/", "", $verse);
                             $verse_len = strlen(trim($verse));
 
@@ -187,22 +192,35 @@
                                 $verse_min = $verse_len;
                                 $verse_min_text = $line;
                             }
+                            */
 
                             # iterate search_array one element at a time
                             foreach($search_array as $search_for) {
 
                                 # If its too short, dont do anything
-                                if (strlen($search_for) <= 1 || $search_for == "  ") { /*echo "Search criteria \"$search_for\" too short!<BR>";*/ continue; }
+                                if (strlen($search_for) <= 1 || $search_for == "  ") {
+                                    echo "Search criteria \"$search_for\" too short<BR>";
+                                    break 2;
+                                }
 
                                 # remove all leading spaces
-                                while (substr($search_for, 0, 1) == " ") { $search_for = substr($search_for, 1); }
+                                while (substr($search_for, 0, 1) == " ") {
+                                    $search_for = substr($search_for, 1);
+                                }
 
                                 # replace double spaces with spaces, might not be needed anymore
-                                if (strpos($search_for, "  ") !== false) { $search_for = str_replace("  ", " ", $search_for); }
+                                if (strpos($search_for, "  ") !== false) {
+                                    $search_for = str_replace("  ", " ", $search_for);
+                                }
 
-                                # append a space to the end if the search string ends with a number preceded by a colon
-                                # otherwise, Genesis 1:1 would also match Genesis 1:13, Genesis 1:1, etc.
-                                if (preg_match("/:[0-9]+$/", $search_for)) { $search_for .= " "; }
+                                # Exact verse number matches
+                                # this is a good candidate for a toggle/option/checkbox for the user
+                                # append a space to the end if the search string ends with a number preceded by a colon (eg. :4)
+                                # otherwise, Genesis 1:1 will match Genesis 1:1 and also Genesis 1:13, Genesis 1:17, etc.
+                                # by adding the space Genesis 1:1 will only match against Genesis 1:1
+                                if (preg_match("/:[0-9]+$/", $search_for)) {
+                                    $search_for .= " ";
+                                }
 
                                 # Case in-sensitive
                                 if ($case_toggle === false) {
@@ -210,25 +228,25 @@
                                     # if line contains search_for, case in-sensitive
                                     if (stripos($line, $search_for) !== false) {
 
-                                        # Change formatting to be more suitable for html output
+                                        # add a line break at the end. with this there
+                                        # is no need wrap the output in <pre> tags
                                         $new_line = str_replace("\n", "\n<BR>", $line);
 
                                         # Show italics instead of the original brackets
                                         $new_line = str_replace("[", "<I>", $new_line);
                                         $new_line = str_replace("]", "</I>", $new_line);
 
-                                        # Bold book names - get book name
-                                        $book = substr($new_line, 0, strpos($new_line, ":"));
-                                        $book = substr($book, 0, strrpos($book, " "));
-
                                         # Highlight search terms
+                                        # preserve the original text since we are in case-insensitive mode
                                         $search_for_orig = substr($new_line, stripos($new_line, $search_for), strlen($search_for));
                                         $new_line = substr_replace($new_line, "<SPAN style=\"background-color:lightgreen\">$search_for_orig</SPAN>", stripos($new_line, $search_for_orig), strlen($search_for_orig));
 
                                         # Bold book names - replace only first occurance with bold
-                                        if (strpos($new_line, $book) !== false) { $new_line = preg_replace("/$book/", "<B>$book</B>", $new_line, 1); }
+                                        if (strpos($new_line, $book) !== false) {
+                                            $new_line = preg_replace("/$book/", "<B>$book</B>", $new_line, 1);
+                                        }
 
-                                        # word and character counts testing
+                                        # word and character counts
                                         #echo "(W";
                                         #echo (count(explode(" ", $verse)) - 1);
                                         #echo ")(C$verse_len)";
@@ -254,10 +272,6 @@
                                         # Outside of <pre> tags \n (the invisible control character new line) are not treated the same in html
                                         $new_line = str_replace("\n", "\n<BR>", $line);
 
-                                        # Bold book names - get book name
-                                        $book = substr($new_line, 0, strpos($new_line, ":"));
-                                        $book = substr($book, 0, strrpos($book, " "));
-
                                         # Show italics instead of the original brackets
                                         $new_line = str_replace( "[", "<I>", $new_line);
                                         $new_line = str_replace( "]", "</I>", $new_line);
@@ -267,7 +281,9 @@
 
                                         # Bold book names - replace first occurance from the beginning with bold
                                         # preg_replace searches left to right, so we limit it to one replacement
-                                        if (strpos($new_line, $book) !== false) { $new_line = preg_replace("/$book/", "<B>$book</B>", $new_line, 1); }
+                                        if (strpos($new_line, $book) !== false) {
+                                            $new_line = preg_replace("/$book/", "<B>$book</B>", $new_line, 1);
+                                        }
 
                                         # Output the result to the page
                                         echo "$new_line";
@@ -282,7 +298,7 @@
                             }
                         }
                     } else {
-                        echo "File open error! (file: $bible_text)<BR>";
+                        echo "File open error! ($bible_text)<BR>";
                     }
 
                     # Display a summary of the results based on the number of matches
