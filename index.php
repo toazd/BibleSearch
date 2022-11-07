@@ -196,15 +196,22 @@
                                     $search_for .= ";$book $book_num:$number";
                                 }
                             } elseif (strpos($search, ",") !== false) {
-                                # Remove invalid characters (anything that isn't 0-9 or a comma ",")
-                                $search = preg_replace("/[^0-9,]/", "", $search);
+                                # Get the book name
+                                $book = substr($search, 0, strpos($search, ":"));
+                                $book_num = substr($book, strrpos($book, " "), strpos($search, ":"));
+                                $book = substr($book, 0, strrpos($book, " "));
 
-                                # expand comma seperated verses
+                                # expand comma seperated verses and append
+                                # eg. James 1:5,6,22 => James 1:
+                                # them to the search array
                                 $range = explode(",", $search);
                                 if (strpos($range[0], ":") !==false) {
                                     $range[0] = substr($range[0], (strpos($range[0], ":") + 1));
+                                    foreach ($range as $search) {
+                                        $search_for .= ";$book $book_num:$search;";
+                                    }
                                 }
-                                var_dump($range);
+                                #var_dump($range);
                                 echo "<BR>";
                             }
                         }
