@@ -202,7 +202,7 @@
                                 $book = substr($book, 0, strrpos($book, " "));
 
                                 # expand comma seperated verses and append
-                                # eg. James 1:5,6,22 => James 1:
+                                # eg. James 1:5,6,22 => James 1:5, James 1:6, James 1:22
                                 # them to the search array
                                 $range = explode(",", $search);
                                 if (strpos($range[0], ":") !==false) {
