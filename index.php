@@ -50,10 +50,9 @@
             <BR><BR>
             <?php
                 #ini_set("auto_detect_line_endings", true);
-
                 if (isset($_POST['submit'])) {
 
-                    # If case sensitive checkbox is checked
+                    # Determine case sensitivity based on the checkbox status
                     if (isset($_POST['casetoggle'])) {
                         $case_toggle = true; # Yes
                     } else {
@@ -78,7 +77,7 @@
                         var_dump($case_toggle);
                         echo "<br>";
 
-                        $search_for = "debug string: used to run tests; my rock; James 1:10-5; sanctification; prince of peace; booz; boaz; Joshua 1:1-1; John 3:16-17 3:17-16; Spirit of God; 3 john 1:7-11; king of kings; Genesis 1:1-10; and god saw; Song of Solomon 2:1-2; fowls; Song of Solomon 2:3-4; damsel; living; Ruth 2:; \"; \'; Romans 8:15-0; Obadiah 1:0-25; Joel 19; Nahum 3:3-9; Amos 3:3; Malachi 4:1-7; Jude 1:9-17";
+                        $search_for = "debug string: used to run tests; my rock; James 1:10-5; sanctification; prince of peace; James 1:15,10,5; boaz; Joshua 1:1-1; John 3:16-17 3:17-16; Spirit of God; 3 john 1:7-11; king of kings; Genesis 1:1-10; and god saw; Song of Solomon 2:7,14,21; fowls; Song of Solomon 2:3-4; damsel; living; Ruth 2:; \"; \'; Romans 8:15-0; Obadiah 1:0-25; Joel 19; Nahum 3:3-9; Amos 3:3; Malachi 4:1-7; Jude 1:9-17";
                     }
 
                     # Bible text used to search
@@ -229,17 +228,19 @@
                                         # Bold book names - replace only first occurance with bold
                                         if (strpos($new_line, $book) !== false) { $new_line = preg_replace("/$book/", "<B>$book</B>", $new_line, 1); }
 
+                                        # word and character counts testing
                                         #echo "(W";
                                         #echo (count(explode(" ", $verse)) - 1);
                                         #echo ")(C$verse_len)";
                                         #echo "\t$new_line";
 
+                                        # Output the result to the page
                                         echo "$new_line";
 
                                         # Increment the match counter by 1
                                         $match_count++;
 
-                                        # avoid outputting duplicate array matches
+                                        # avoid outputting duplicate array matches by skipping to checking the next line instead of the rest of the search array
                                         continue 2;
                                     }
                                 } elseif ($case_toggle === true) {
@@ -250,6 +251,7 @@
                                     if (strpos($line, $search_for) !== false) {
 
                                         # Change formatting to be more suitable for html output
+                                        # Outside of <pre> tags \n (the invisible control character new line) are not treated the same in html
                                         $new_line = str_replace("\n", "\n<BR>", $line);
 
                                         # Bold book names - get book name
@@ -263,15 +265,17 @@
                                         # Highlight search terms
                                         $new_line = str_replace($search_for, "<SPAN style=\"background-color:lightgreen\">$search_for</SPAN>", $new_line);
 
-                                        # Bold book names - replace first occurance with bold
+                                        # Bold book names - replace first occurance from the beginning with bold
+                                        # preg_replace searches left to right, so we limit it to one replacement
                                         if (strpos($new_line, $book) !== false) { $new_line = preg_replace("/$book/", "<B>$book</B>", $new_line, 1); }
 
+                                        # Output the result to the page
                                         echo "$new_line";
 
                                         # Increment the match counter by 1
                                         $match_count++;
 
-                                        # avoid outputting duplicate array matches
+                                        # avoid outputting duplicate array matches by skipping to checking the next line instead of the rest of the search array
                                         continue 2;
                                     }
                                 }
@@ -297,7 +301,7 @@
                         #echo "$verse_min_text";
                     }
 
-                    # Close the text file
+                    # Close the file that was opened for searching
                     fclose($handle);
                 }
             ?>
