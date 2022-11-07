@@ -55,16 +55,16 @@
 
                     # If case sensitive checkbox is checked
                     if (isset($_POST['casetoggle'])) {
-                        $case_toggle = true;
+                        $case_toggle = true; # Yes
                     } else {
-                        $case_toggle = false;
+                        $case_toggle = false; # No/error/unknown/default
                     }
 
                     # Get the text to search for from the criteria input field
                     $search_for = $_POST['criteria'];
 
-                    # If the search criteria is empty do nothing
-                    if ($search_for == "" || trim($search_for) == "") { exit; }
+                    # If the search criteria is empty or only contains control characters do nothing
+                    if (trim($search_for) == "") { exit; }
 
                     # remove double quotes
                     if (strpos($search_for, "\"") !== false) { $search_for = str_replace("\"", "", $search_for); }
@@ -81,79 +81,6 @@
                         $search_for = "debug string: used to run tests; my rock; James 1:10-5; sanctification; prince of peace; booz; boaz; Joshua 1:1-1; John 3:16-17 3:17-16; Spirit of God; 3 john 1:7-11; king of kings; Genesis 1:1-10; and god saw; Song of Solomon 2:1-2; fowls; Song of Solomon 2:3-4; damsel; living; Ruth 2:; \"; \'; Romans 8:15-0; Obadiah 1:0-25; Joel 19; Nahum 3:3-9; Amos 3:3; Malachi 4:1-7; Jude 1:9-17";
                     }
 
-                    # Won't display correctly if the font isn't fixed-width
-                    if ($search_for == "kitty") {
-                    # v2
-                    echo "<pre>
-                                                                      ██
-                                                  ██                ██  ██
-                                                ██  ██            ██░░  ██
-                                                ██░░░░▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░██
-                                                ██░░▓▓░░░░  ░░▒▒▓▓░░░░░░██
-                                                ████  ░░  ░░  ░░░░░░░░░░██
-                                              ▓▓░░░░░░░░  ░░░░░░░░░░░░░░░░▓▓
-                                              ██░░░░░░░░░░░░░░░░░░░░░░░░░░██
-                                              ██  ▒▒░░░░░░  ▒▒▒▒░░░░░░░░░░██
-                                              ██  ██▒▒░░░░▓▓▒▒░░░░        ██
-                                            ██  ░░  ░░    ░░░░░░    ░░░░░░██
-                                            ██░░    ██      ░░░░░░      ░░██
-                                            ██░░░░██  ████░░░░░░░░░░░░░░░░██
-                                              ██░░░░      ░░░░░░░░░░░░░░████
-                                              ██░░░░    ░░░░░░░░░░░░░░░░████
-                                                ██░░░░░░░░░░░░░░░░░░░░▓▓██
-                                                  ██░░░░░░░░░░░░░░░░░░░░  ██
-                                                ██░░░░░░░░░░░░░░░░░░░░  ░░  ██
-                                                ██░░░░░░░░░░░░░░░░░░  ░░░░    ██
-                                              ██░░░░  ░░░░░░░░░░░░░░░░░░  ░░░░  ██
-                                            ██░░░░░░  ░░░░░░░░░░░░░░░░░░  ░░░░    ██
-                                          ██░░░░░░    ░░░░░░░░░░░░░░░░░░░░░░      ░░▓▓
-                                        ██░░░░░░░░    ░░░░░░░░░░░░░░░░░░░░  ░░░░░░░░  ██
-                                      ██  ░░░░░░░░    ░░░░░░░░░░░░░░░░░░░░░░░░░░    ░░██
-                                    ▓▓░░░░░░░░  ▓▓    ░░░░░░░░░░░░░░░░░░░░░░░░░░  ░░░░  ▓▓
-                                  ▓▓░░░░░░    ▓▓██  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ░░    ░░▓▓
-                                ██        ████    ██░░░░░░░░░░░░░░░░░░  ████  ░░░░░░  ░░░░██
-                                ██        ▓▓██    ██░░░░░░░░░░░░░░░░░░░░████░░░░░░░░  ░░░░██
-                                ██    ▓▓▓▓        ██░░░░░░░░░░░░░░░░▓▓▓▓    ░░░░░░░░░░░░░░░░▓▓
-                                ██  ██            ██░░░░░░░░░░░░░░██    ░░░░░░░░░░░░░░      ██
-                                  ██▓▓          ██░░░░░░  ██░░░░░░██  ░░░░░░░░░░░░░░░░  ░░░░██
-                                  ██▓▓          ██░░░░░░  ██░░░░░░██  ░░░░░░░░░░░░░░░░  ░░░░██
-                          ▓▓▓▓▓▓▓▓░░░░          ██░░░░░░  ██░░░░▓▓░░  ░░░░░░░░░░░░░░░░  ░░░░██
-                        ▓▓██▒▒██▒▒▓▓          ▓▓░░░░░░  ▓▓░░  ░░██  ░░░░░░░░░░░░░░░░░░░░░░░░██
-                        ██▒▒██▒▒████        ██░░░░░░  ██    ▓▓████████░░░░░░░░░░░░░░░░░░░░░░██
-                        ██▒▒██▓▓▒▒██      ▓▓    ░░  ▓▓██  ▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██
-                        ████▒▒██▒▒██    ██  ██    ██    ██    ██                        ██░░░░██
-            ▓▓██████▓▓██  ██████▓▓      ██████▓▓▓▓      ██▓▓██████▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓████░░░░██
-          ▓▓░░░░░░░░░░░░  ░░░░  ░░            ░░        ░░  ░░▒▒                    ░░██░░    ██
-            ██▓▓▓▓████████████████████                ████████              ██████████  ░░░░████
-                                      ██              ██    ██▓▓▓▓▓▓████▓▓██░░  ░░░░░░  ░░░░██
-                    ██████████████████                ██      ░░    ░░    ░░░░░░  ░░░░░░  ██
-                  ██                                    ██  ░░░░  ░░░░░░  ░░░░░░  ░░██████
-                    ▓▓▓▓▓▓▓▓▓▓                            ▓▓▓▓██▓▓▓▓░░░░  ░░▓▓▓▓▓▓▓▓
-                    ░░░░  ░░░░                                  ▒▒████████▓▓░░
-</pre>";
-                        exit;
-
-                        # v1
-                        echo "<pre>
-                        _
-                        \`*-.
-                         )  _`-.
-                        .  : `. .
-                        : _   '  \
-                        ; *` _.   `*-._
-                        `-.-'          `-.
-                          ;       `       `.
-                          :.       .        \
-                          . \  .   :   .-'   .
-                          '  `+.;  ;  '      :
-                          :  '  |    ;       ;-.
-                          ; '   : :`-:     _.`* ;
-                       .*' /  .*' ; .*`- +'  `*'
-                       `*-*   `*-*  `*-*'
-                        </pre>";
-                        exit;
-                    }
-
                     # Bible text used to search
                     # each line follows the following format:
                     # Book <one_space> Book#:Verse# <one_space> <verse>
@@ -164,6 +91,7 @@
                     # Support multiple searches per query, each seperated by a semi-colon ";"
                     # this foreach block will look for ranges of the format Book#:Verse#-Verse#
                     # and expand them (eg. Genesis 1:1-2 becomes Genesis 1:1; Genesis 1:2)
+                    # Reverse order is also supported (eg. Genesis 1:2-1 becomes Genesis 1:1; Genesis 1:2)
                     foreach(explode(";", $search_for) as &$search) {
 
                         # only support one book:verse#-verse# range per group
@@ -176,7 +104,9 @@
                                 continue;
                             }
 
+                            # process ranges specified using a dash "-" (eg. Genesis 1:1-12)
                             if (strpos($search, "-") !==false) {
+
                                 # expand ranges
                                 $range = substr($search, strpos($search, ":"));
                                 $range = substr($range, 1);
@@ -185,34 +115,44 @@
                                 $range = preg_replace("/[^0-9-]/", "", $range);
 
                                 # Split at the dash "-"
-                                $range = explode("-", $range); # range is now an array
+                                $range = explode("-", $range); # range is now an array (it was a string)
 
                                 # add the expanded range to the string of search criteria
                                 # eg. Psalm 150:1-3 => Psalm 150:1; Psalm 150:2; Psalm 150:3
                                 foreach (range($range[0], $range[1]) as $number) {
+
+                                    # Step 1 Return a portion of $search starting from the beginning and ending at the first colon encountered from the beginning
                                     $book = substr($search, 0, strpos($search, ":"));
+
+                                    # From here we can more easily grab the book number
+                                    # Return a portion of $book beginning from the end and ending at the first colon from the beginning
                                     $book_num = substr($book, strrpos($book, " "), strpos($search, ":"));
+
+                                    # Step 2 Return a portion of $book starting at the beginning and ending at first space encountered starting from the end
                                     $book = substr($book, 0, strrpos($book, " "));
+
+                                    # append the new entry to the string that will become the array of search criteria
                                     $search_for .= ";$book $book_num:$number";
                                 }
+
+                            # process "ranges" delimited by commas (eg. Genesis 1:7,1,12)
                             } elseif (strpos($search, ",") !== false) {
+
                                 # Get the book name
                                 $book = substr($search, 0, strpos($search, ":"));
                                 $book_num = substr($book, strrpos($book, " "), strpos($search, ":"));
                                 $book = substr($book, 0, strrpos($book, " "));
 
-                                # expand comma seperated verses and append
+                                # expand comma seperated verses and append them to the search array
                                 # eg. James 1:5,6,22 => James 1:5, James 1:6, James 1:22
-                                # them to the search array
                                 $range = explode(",", $search);
-                                if (strpos($range[0], ":") !==false) {
-                                    $range[0] = substr($range[0], (strpos($range[0], ":") + 1));
+                                $pos = strpos($range[0], ":");
+                                if ($pos !== false) {
+                                    $range[0] = substr($range[0], ($pos + 1));
                                     foreach ($range as $search) {
-                                        $search_for .= ";$book $book_num:$search;";
+                                        $search_for .= ";$book $book_num:$search";
                                     }
                                 }
-                                #var_dump($range);
-                                echo "<BR>";
                             }
                         }
                     }
