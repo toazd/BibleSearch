@@ -1,6 +1,9 @@
+<!DOCTYPE html>
 <HTML lang="en">
     <HEAD>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Bible search tool</title>
         <STYLE type="text/css">
         @font-face {
             font-family: "Code New Roman";
@@ -26,22 +29,20 @@
         }
 
         #search_form {
-            margin-left:   1%;
-            margin-right:  1%;
-            margin-top:    1%;
-            margin-bottom: 1%;
+            margin-left:   10px;
+            margin-right:  10px;
+            margin-top:    10px;
+            margin-bottom: 10px;
             display:       block;
             outline-style: hidden;
         }
         </STYLE>
     </HEAD>
-
     <BODY>
         <DIV id="search_form">
         <SCRIPT>
             document.write("<H2><A HREF=\"" + window.location.href + "\" style=\"text-decoration: none\">King James Version (Cambridge)</A></H2>");
         </SCRIPT>
-
         <FORM action="" method="post">
             <INPUT type="text" name="criteria" value="" size=50 maxlength=255 autofocus>
             <INPUT type="submit" name="submit" value="Find in Bible">
@@ -76,8 +77,7 @@
                         echo "case_toggle: ";
                         var_dump($case_toggle);
                         echo "<br>";
-
-                        $search_for = "debug string: used to run tests; my rock; James 1:10-5; sanctification; prince of peace; James 1:15,10,5; boaz; Joshua 1:1-1; John 3:16-17 3:17-16; Spirit of God; 3 john 1:7-11; king of kings; Genesis 1:1-10; and god saw; Song of Solomon 2:7,14,21; fowls; Song of Solomon 2:3-4; damsel; living; Ruth 2:; \"; \'; Romans 8:15-0; Obadiah 1:0-25; Joel 19; Nahum 3:3-9; Amos 3:3; Malachi 4:1-7; Jude 1:9-17";
+                        $search_for = "debug string: used to run tests; my rock; James 1:10-5; sanctification; prince of peace; Mark 1:15,10,5; boaz; Joshua 1:1-1; John 3:16-17 3:17-16; Spirit of God; 3 john 1:7-11; king of kings; Genesis 1:1-10; and god saw; Song of Solomon 2:7,14,21; fowls; Song of Solomon 2:3-4; damsel; living; Ruth 2:; \"; \'; Romans 8:15-0; Obadiah 1:0-25; Joel 19; Nahum 3:3-9; Amos 3:3; Malachi 4:1-7; Jude 1:9-17";
                     }
 
                     # Bible text used to search
@@ -137,7 +137,7 @@
                             # process "ranges" delimited by commas (eg. Genesis 1:7,1,12)
                             } elseif (strpos($search, ",") !== false) {
 
-                                # Get the book name
+                                # Get the book name and book number
                                 $book = substr($search, 0, strpos($search, ":"));
                                 $book_num = substr($book, strrpos($book, " "), strpos($search, ":"));
                                 $book = substr($book, 0, strrpos($book, " "));
@@ -197,11 +197,11 @@
                                 # remove all leading spaces
                                 while (substr($search_for, 0, 1) == " ") { $search_for = substr($search_for, 1); }
 
-                                # replace double spaces with spaces
+                                # replace double spaces with spaces, might not be needed anymore
                                 if (strpos($search_for, "  ") !== false) { $search_for = str_replace("  ", " ", $search_for); }
 
-                                # append a space to the end if the search string ends with a number
-                                # otherwise, Genesis 1:1 would also match Genesis 1:13, Genesis 1:20, etc.
+                                # append a space to the end if the search string ends with a number preceded by a colon
+                                # otherwise, Genesis 1:1 would also match Genesis 1:13, Genesis 1:1, etc.
                                 if (preg_match("/:[0-9]+$/", $search_for)) { $search_for .= " "; }
 
                                 # Case in-sensitive
