@@ -44,6 +44,11 @@
         <SCRIPT>
             document.write("<H2><A HREF=\"" + window.location.href + "\" style=\"text-decoration: none\">King James Version (Cambridge)</A></H2>");
         </SCRIPT>
+        <H5>
+            Search queries may be separated by semi-colons ";" (eg. King of kings; John 3:16)<BR>
+            Ranges may be specified with either a dash "-" (eg. Psalm 150:1-6)
+            or comma(s) (eg. Psalm 150:1,3,5)
+        </H5>
         <FORM action="" method="post">
             <INPUT type="text" name="criteria" value="" size=50 maxlength=255 autofocus>
             <INPUT type="submit" name="submit" value="Find in Bible">
