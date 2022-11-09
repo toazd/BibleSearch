@@ -77,10 +77,14 @@
                     if (trim($search_for) == "") { exit; }
 
                     # remove double quotes
-                    if (strpos($search_for, "\"") !== false) { $search_for = str_replace("\"", "", $search_for); }
+                    if (strpos($search_for, "\"") !== false) {
+                        $search_for = str_replace("\"", "", $search_for);
+                    }
 
                     # remove single quotes
-                    if (strpos($search_for, "\'") !== false) { $search_for = str_replace("\'", "", $search_for); }
+                    if (strpos($search_for, "\'") !== false) {
+                        $search_for = str_replace("\'", "", $search_for);
+                    }
 
                     # quickly test features
                     if ($search_for == "debug") {
@@ -103,7 +107,8 @@
                     # Reverse order is also supported (eg. Genesis 1:2-1 becomes Genesis 1:1; Genesis 1:2)
                     foreach(explode(";", $search_for) as &$search) {
 
-                        # support one "book#:verse#-verse#" or "book#:verse#,verse#,verse#" range per group
+                        # support exactly one "dash" book#:verse#-verse# range or
+                        # at least one "comma" book#:verse#,verse#,verse# separated list per group
                         if (preg_match_all("/[0-9]+:[0-9]+-[0-9]+/", $search) == 1 || preg_match_all("/[0-9]+:[0-9]+,[0-9]+/", $search) >= 1) {
 
                             # per group, ranges and commas together are not supported
@@ -120,13 +125,11 @@
                                 $book_num = substr($book, strrpos($book, " "));
                                 $book = substr($book, 0, strrpos($book, " "));
 
-                                # expand ranges
+                                # Get the range by itself
                                 $range = substr($search, strpos($search, ":"));
                                 $range = substr($range, 1);
-
                                 # Remove invalid characters (anything that isn't 0-9 or a dash "-")
                                 $range = preg_replace("/[^0-9-]/", "", $range);
-
                                 # Split at the dash "-"
                                 $range = explode("-", $range); # range is now an array (it was a string)
 
@@ -161,6 +164,13 @@
 
                     # turn the search criteria into an array, splitting at the semi-colons
                     $search_array = explode(";", $search_for);
+
+                    unset($search_for);
+                    foreach ($search_array as &$search_for) {
+                        #echo "Before: \"$search_for\"<BR>";
+                        $search_for = ExpandAbbreviatedBookName(trim($search_for));
+                        #echo "After: \"$search_for\"<BR>";
+                    }
 
                     unset($search_for, $search, $book, $book_num, $pos, $range, $handle, $match_count, $line); # just in case
 
@@ -207,7 +217,7 @@
                             foreach($search_array as $search_for) {
 
                                 # If its too short, dont do anything
-                                if (strlen($search_for) <= 1 || $search_for == "  ") {
+                                if (strlen(trim($search_for)) <= 1) {
                                     echo "Search criteria \"$search_for\" too short<BR>";
                                     break 2;
                                 }
@@ -328,6 +338,132 @@
 
                     # Close the file that was opened for searching
                     fclose($handle);
+                }
+
+                function ExpandAbbreviatedBookName($string_to_check) {
+                    # Support abbreviated book names eg. Jas = James, Hab = Habakkuk
+                    $abbrev_booknames = array("Gen" => "Genesis",
+                                              "Exo" => "Exodus",
+                                              "Exod" => "Exodus",
+                                              "Lev" => "Leviticus",
+                                              "Num" => "Numbers",
+                                              "Deu" => "Deuteronomy",
+                                              "Deut" => "Deuteronomy",
+                                              "Jos" => "Joshua",
+                                              "Josh" => "Joshua",
+                                              "Jgs" => "Judges",
+                                              "Judg" => "Judges",
+                                              "Rth" => "Ruth",
+                                              "1Sam" => "1 Samuel",
+                                              "2Sam" => "2 Samuel",
+                                              "1 Sam" => "1 Samuel",
+                                              "2 Sam" => "2 Samuel",
+                                              "1Kgs" => "1 Kings",
+                                              "2Kgs" => "2 Kings",
+                                              "1 Kgs" => "1 Kings",
+                                              "2 Kgs" => "2 Kings",
+                                              "1Chr" => "1 Chronicles",
+                                              "2Chr" => "2 Chronicles",
+                                              "1 Chr" => "1 Chronicles",
+                                              "2 Chr" => "2 Chronicles",
+                                              "Ezr" => "Ezra",
+                                              "Neh" => "Nehemiah",
+                                              "Est" => "Esther",
+                                              "Esth" => "Esther",
+                                              "Ps" => "Psalms",
+                                              "Psa" => "Psalms",
+                                              "Pss" => "Psalms",
+                                              "Pro" => "Proverbs",
+                                              "Prov" => "Proverbs",
+                                              "Ecc" => "Ecclesiastes",
+                                              "Eccl" => "Ecclesiastes",
+                                              "Qoh" => "Ecclesiastes",
+                                              "Sol" => "Song of Solomon",
+                                              "Song" => "Song of Solomon",
+                                              "Can" => "Song of Solomon",
+                                              "Cant" => "Song of Solomon",
+                                              "Isa" => "Isaiah",
+                                              "Jer" => "Jeremiah",
+                                              "Lam" => "Lamentations",
+                                              "Eze" => "Ezekiel",
+                                              "Dan" => "Daniel",
+                                              "Hos" => "Hosea",
+                                              "Joe" => "Joel",
+                                              "Amo" => "Amos",
+                                              "Oba" => "Obadiah",
+                                              "Jon" => "Jonah",
+                                              "Mic" => "Micah",
+                                              "Nah" => "Nahum",
+                                              "Hab" => "Habakkuk",
+                                              "Zep" => "Zephaniah",
+                                              "Hag" => "Haggai",
+                                              "Zec" => "Zechariah",
+                                              "Zech" => "Zechariah",
+                                              "Mal" => "Malachi",
+                                              "Mat" => "Matthew",
+                                              "Mt" => "Matthew",
+                                              "Matt" => "Matthew",
+                                              "Mar" => "Mark",
+                                              "Mk" => "Mark",
+                                              "Luk" => "Luke",
+                                              "Lk" => "Luke",
+                                              "Jhn" => "John",
+                                              "Jn" => "John",
+                                              "Jno" => "John",
+                                              "Act" => "Acts",
+                                              "Ac" => "Acts",
+                                              "Rom" => "Romans",
+                                              "1Cor" => "1 Corinthians",
+                                              "2Cor" => "2 Corinthians",
+                                              "1 Cor" => "1 Corinthians",
+                                              "2 Cor" => "2 Corinthians",
+                                              "Gal" => "Galations",
+                                              "Eph" => "Ephesians",
+                                              "Phi" => "Philippians",
+                                              "Col" => "Colossians",
+                                              "1Ths" => "1 Thessalonians",
+                                              "2Ths" => "2 Thessalonians",
+                                              "1 Ths" => "1 Thessalonians",
+                                              "2 Ths" => "2 Thessalonians",
+                                              "1Tim" => "1 Timothy",
+                                              "2Tim" => "2 Timothy",
+                                              "1 Tim" => "1 Timothy",
+                                              "2 Tim" => "2 Timothy",
+                                              "Tit" => "Titus",
+                                              "Phn" => "Philemon",
+                                              "Heb" => "Hebrews",
+                                              "Jas" => "James",
+                                              "1Pet" => "1 Peter",
+                                              "2Pet" => "2 Peter",
+                                              "1 Pet" => "1 Peter",
+                                              "2 Pet" => "2 Peter",
+                                              "1Jn" => "1 John",
+                                              "2Jn" => "2 John",
+                                              "3Jn" => "3 John",
+                                              "1 Jn" => "1 John",
+                                              "2 Jn" => "2 John",
+                                              "3 Jn" => "3 John",
+                                              "1Jno" => "1 John",
+                                              "2Jno" => "2 John",
+                                              "3Jno" => "3 John",
+                                              "1 Jno" => "1 John",
+                                              "2 Jno" => "2 John",
+                                              "3 Jno" => "3 John",
+                                              "Jud" => "Jude",
+                                              "Rev" => "Revelation");
+
+                    if (preg_match_all("/[0-9]+:[0-9]+/", $string_to_check) >= 1) {
+                        # Get the book name and book number
+                        $book = substr($string_to_check, 0, strpos($string_to_check, ":"));
+                        $book = substr($book, 0, strrpos($book, " "));
+                        $book = ucfirst(strtolower(trim($book)));
+                        #reset($abbrev_booknames);
+                        if (array_key_exists("$book", $abbrev_booknames)) {
+                            return preg_replace("/$book/i", $abbrev_booknames[$book], $string_to_check, 1);
+                        }
+                    }
+
+                    return $string_to_check;
                 }
             ?>
         </FORM>
