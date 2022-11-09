@@ -29,6 +29,10 @@
             font-size: 16px;
         }
 
+        #search_help {
+             font-size: 12px;
+        }
+
         #search_form {
             margin-left:   10px;
             margin-right:  10px;
@@ -44,11 +48,12 @@
         <SCRIPT>
             document.write("<H2><A HREF=\"" + window.location.href + "\" style=\"text-decoration: none\">King James Version (Cambridge)</A></H2>");
         </SCRIPT>
-        <H5>
-            Search queries may be separated by semi-colons ";" (eg. King of kings; John 3:16)<BR>
-            Ranges may be specified with either a dash "-" (eg. Psalm 150:1-6)
-            or comma(s) (eg. Psalm 150:1,3,5)
-        </H5>
+        <UL id="search_help">
+            <LI>Search queries may be separated by semi-colons ";" (King of kings; John 3:16)</LI>
+            <LI>Ranges may be specified with either a dash "-" (Psalm 150:2-5)<BR>
+            or one or more commas "," (Psalm 150:1,3,5)</LI>
+            <LI>Results will be in biblical order</LI>
+        </UL>
         <FORM action="" method="post">
             <INPUT type="text" name="criteria" value="" size=50 maxlength=255 autofocus>
             <INPUT type="submit" name="submit" value="Find in Bible">
@@ -56,7 +61,6 @@
             <LABEL for="casetoggle">Case-sensitive</LABEL>
             <BR><BR>
             <?php
-                #ini_set("auto_detect_line_endings", true);
                 if (isset($_POST['submit'])) {
 
                     # Determine case sensitivity based on the checkbox status
@@ -69,7 +73,7 @@
                     # Get the text to search for from the criteria input field
                     $search_for = $_POST['criteria'];
 
-                    # If the search criteria is empty or only contains control characters do nothing
+                    # If the search criteria contains only whitespace or control characters do nothing
                     if (trim($search_for) == "") { exit; }
 
                     # remove double quotes
@@ -83,11 +87,11 @@
                         echo "case_toggle: ";
                         var_dump($case_toggle);
                         echo "<br>";
-                        $search_for = "debug string: used to run tests; my rock; James 1:10-5; sanctification; prince of peace; Mark 1:15,10,5; boaz; Joshua 1:1-1; John 3:16-17 3:17-16; Spirit of God; 3 john 1:7-11; king of kings; Genesis 1:1-10; and god saw; Song of Solomon 2:7,14,21; fowls; Song of Solomon 2:3-4; damsel; living; Ruth 2:; \"; \'; Romans 8:15-0; Obadiah 1:0-25; Joel 19; Nahum 3:3-9; Amos 3:3; Malachi 4:1-7; Jude 1:9-17";
+                        $search_for = "debug search string: used to run tests; my rock; James 1:10-5; sanctification; prince of peace; Mark 1:15,10,5; boaz; Joshua 1:1-1; John 3:16-17 3:17-16; Spirit of God; 3 john 1:7-11; king of kings; Genesis 1:1-10; and god saw; Song of Solomon 2:7,14,21; fowls; Song of Solomon 2:3-4; damsel; living; Ruth 2:; \"; \'; Romans 8:15-0; Obadiah 1:0-25; Joel 19; Nahum 3:3-9; Amos 3:3; Malachi 4:1-7; Jude 1:9-17";
                     }
 
-                    # Bible text used to search
-                    # each line follows the following format:
+                    # Bible text used to search.
+                    # Each line follows the following format:
                     # Book <one_space> Book#:Verse# <one_space> <verse>
                     $bible_text = "KJV-Cambridge_UTF-8_notes_removed_ule.txt";
 
@@ -158,7 +162,7 @@
                     # turn the search criteria into an array, splitting at the semi-colons
                     $search_array = explode(";", $search_for);
 
-                    unset($search_for, $book, $book_num, $pos, $range); # just in case
+                    unset($search_for, $search, $book, $book_num, $pos, $range, $handle, $match_count, $line); # just in case
 
                     # open the file of the text to search read only
                     $handle = @fopen($bible_text, "r");
@@ -173,8 +177,8 @@
                         # get one line at a time from the file
                         while (($line = fgets($handle)) !== false) {
 
-                            # if the line is empty or contains only a newline, skip it
-                            if ($line == "" || $line == "\n") { continue; } # just in case
+                            # if the line is empty or contains only control characters, skip it
+                            if (trim($line == "")) { continue; } # just in case
 
                             # Get book name and book number
                             # Step 1 Return a portion of $search starting from the beginning and ending at the first colon encountered from the beginning
