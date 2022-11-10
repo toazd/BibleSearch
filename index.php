@@ -91,7 +91,7 @@
                         echo "case_toggle: ";
                         var_dump($case_toggle);
                         echo "<br>";
-                        $search_for = "debug search string: used to run tests; my rock; James 1:10-5; sanctification; prince of peace; Mark 1:15,10,5; boaz; Joshua 1:1-1; John 3:16-17 3:17-16; Spirit of God; 3 john 1:7-11; king of kings; Genesis 1:1-10; and god saw; Song of Solomon 2:7,14,21; fowls; Song of Solomon 2:3-4; damsel; living; Ruth 2:; \"; \'; Romans 8:15-0; Obadiah 1:0-25; Joel 19; Nahum 3:3-9; Amos 3:3; Malachi 4:1-7; Jude 1:9-17";
+                        $search_for = "debug search string: used to run tests; my rock; James 1:10-5; sanctification; prince of peace; Mark 1:15,10,5; boaz; Joshua 1:1-1; John 3:16-17 3:17-16; Spirit of God; 3 john 1:7-11; king of kings; Genesis 1:1-10; and god saw; Cant 2:3,5,17,9; fowls; damsel; living; Ruth 2:; Romans 8:15-0; Obadiah 1:0-25; Joel 19; Nahum 3:3-9; Amos 3:3; Malachi 4:1-7; Jude 1:9-17";
                     }
 
                     # Bible text used to search.
@@ -457,18 +457,17 @@
                                               "jud" => "Jude",
                                               "rev" => "Revelation");
 
-                    if (preg_match_all("/[0-9]+:/", $string_to_check) >= 1) {
+                    if (preg_match_all("/\ [0-9]+:/", $string_to_check) >= 1) {
                         # Get the book name and wrangle it to match the format of the keys of the abbreviated book names array
                         $book = substr($string_to_check, 0, strpos($string_to_check, ":"));
                         $book = substr($book, 0, strrpos($book, " "));
                         $book = strtolower(trim($book));
-
                         # If the abbreviated book name is found, replace it with the expanded version
-                        if (array_key_exists("$book", $abbrev_booknames)) {
+                        if (array_key_exists($book, $abbrev_booknames)) {
+                            # return the string given with the book name replaced
                             return preg_replace("/$book/i", $abbrev_booknames[$book], $string_to_check, 1);
                         }
                     }
-
                     return $string_to_check;
                 }
             ?>
