@@ -188,6 +188,13 @@
                             # if the line is empty or contains only control characters, skip it
                             if (trim($line == "")) { continue; } # just in case
 
+                            # Remove brackets, for now
+                            # they cause a lot of trouble when searching
+                            # for phrases and one word of the phrase has
+                            # brackets around it
+                            $line = str_replace("[", "", $line);
+                            $line = str_replace("]", "", $line);
+
                             # Get book name and book number
                             # Step 1 Return a portion of $search starting from the beginning and ending at the first colon encountered from the beginning
                             $book = substr($line, 0, strpos($line, ":"));
@@ -243,15 +250,11 @@
                                 if ($case_toggle === false) {
 
                                     # if line contains search_for, case in-sensitive
-                                    if (stripos($line, $search_for) !== false) {
+                                    if (stripos(preg_replace("/[\[\]]/","",$line), $search_for) !== false) {
 
                                         # add a line break at the end. with this there
                                         # is no need wrap the output in <pre> tags
                                         $new_line = str_replace("\n", "\n<BR>", $line);
-
-                                        # Show italics instead of the original brackets
-                                        $new_line = str_replace("[", "<I>", $new_line);
-                                        $new_line = str_replace("]", "</I>", $new_line);
 
                                         # Highlight search terms
                                         # preserve the original text since we are in case-insensitive mode
@@ -285,10 +288,6 @@
                                         # Change formatting to be more suitable for html output
                                         # Outside of <pre> tags \n (the invisible control character new line) are not treated the same in html
                                         $new_line = str_replace("\n", "\n<BR>", $line);
-
-                                        # Show italics instead of the original brackets
-                                        $new_line = str_replace( "[", "<I>", $new_line);
-                                        $new_line = str_replace( "]", "</I>", $new_line);
 
                                         # Highlight search terms
                                         $new_line = str_replace($search_for, "<SPAN style=\"background-color:lightgreen\">$search_for</SPAN>", $new_line);
@@ -375,6 +374,7 @@
                                               "ps" => "Psalms",
                                               "psa" => "Psalms",
                                               "pss" => "Psalms",
+                                              "psalm" => "Psalms",
                                               "pro" => "Proverbs",
                                               "prov" => "Proverbs",
                                               "ecc" => "Ecclesiastes",
