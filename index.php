@@ -88,9 +88,7 @@
 
                     # quickly test features
                     if ($search_for == "debug") {
-                        echo "case_toggle: ";
-                        var_dump($case_toggle);
-                        echo "<br>";
+                        echo "case_toggle: ", var_dump($case_toggle), "<BR>";
                         $search_for = "debug search string: used to run tests; my rock; James 1:10-5; sanctification; prince of peace; Mark 1:15,10,5; boaz; Joshua 1:1-1; John 3:16-17 3:17-16; Spirit of God; 3 john 1:7-11; king of kings; Genesis 1:1-10; and god saw; Cant 2:3,5,17,9; fowls; damsel; living; Ruth 2:; Romans 8:15-0; Obadiah 1:0-25; Joel 19; Nahum 3:3-9; Amos 3:3; Malachi 4:1-7; Jude 1:9-17";
                     }
 
@@ -266,10 +264,7 @@
                                         }
 
                                         # word and character counts
-                                        #echo "(W";
-                                        #echo (count(explode(" ", $verse)) - 1);
-                                        #echo ")(C$verse_len)";
-                                        #echo "\t$new_line";
+                                        #echo "(W", (count(explode(" ", $verse)) - 1), ")(C$verse_len)", "\t$new_line";
 
                                         # Output the result to the page
                                         echo "$new_line";
@@ -332,8 +327,7 @@
                     # More than 1
                     if ($match_count > 1) {
                         echo "<P>Found $match_count matching lines</P><BR>";
-                        #echo "Shortest: $verse_min characters<BR>";
-                        #echo "$verse_min_text";
+                        #echo "Shortest: $verse_min characters<BR>", "$verse_min_text";
                     }
 
                     # Close the file that was opened for searching
@@ -342,14 +336,18 @@
 
                 function ExpandAbbreviatedBookName($string_to_check) {
                     # Support abbreviated book names and variations
-                    # eg. Jas = James, Hab = Habakkuk
-                    $abbrev_booknames = array("gen" => "Genesis",
+                    # eg. Jas = James, Hab = Habakkuk, Cant = Song of Solomon
+                    $abbrev_booknames = array("ge" => "Genesis",
+                                              "gen" => "Genesis",
+                                              "ex" => "Exodus",
                                               "exo" => "Exodus",
                                               "exod" => "Exodus",
+                                              "le" => "Leviticus",
                                               "lev" => "Leviticus",
                                               "lv" => "Leviticus",
                                               "num" => "Numbers",
                                               "deu" => "Deuteronomy",
+                                              "de" => "Deuteronomy",
                                               "deut" => "Deuteronomy",
                                               "jos" => "Joshua",
                                               "josh" => "Joshua",
@@ -387,18 +385,26 @@
                                               "can" => "Song of Solomon",
                                               "cant" => "Song of Solomon",
                                               "isa" => "Isaiah",
+                                              "is" => "Isaiah",
+                                              "je" => "Jeremiah",
                                               "jer" => "Jeremiah",
+                                              "la" => "Lamentations",
                                               "lam" => "Lamentations",
                                               "eze" => "Ezekiel",
+                                              "da" => "Daniel",
                                               "dan" => "Daniel",
                                               "hos" => "Hosea",
                                               "joe" => "Joel",
                                               "amo" => "Amos",
                                               "oba" => "Obadiah",
                                               "jon" => "Jonah",
+                                              "mi" => "Micah",
                                               "mic" => "Micah",
+                                              "na" => "Nahum",
                                               "nah" => "Nahum",
+                                              "ha" => "Habakkuk",
                                               "hab" => "Habakkuk",
+                                              "ze" => "Zephaniah",
                                               "zep" => "Zephaniah",
                                               "hag" => "Haggai",
                                               "zec" => "Zechariah",
@@ -409,6 +415,7 @@
                                               "matt" => "Matthew",
                                               "mar" => "Mark",
                                               "mk" => "Mark",
+                                              "lu" => "Luke",
                                               "luk" => "Luke",
                                               "lk" => "Luke",
                                               "jhn" => "John",
@@ -416,12 +423,15 @@
                                               "jno" => "John",
                                               "act" => "Acts",
                                               "ac" => "Acts",
+                                              "ro" => "Romans",
                                               "rom" => "Romans",
                                               "1cor" => "1 Corinthians",
                                               "2cor" => "2 Corinthians",
                                               "1 cor" => "1 Corinthians",
                                               "2 cor" => "2 Corinthians",
+                                              "ga" => "Galations",
                                               "gal" => "Galations",
+                                              "ep" => "Ephesians",
                                               "eph" => "Ephesians",
                                               "phi" => "Philippians",
                                               "col" => "Colossians",
@@ -429,19 +439,40 @@
                                               "2ths" => "2 Thessalonians",
                                               "1 ths" => "1 Thessalonians",
                                               "2 ths" => "2 Thessalonians",
+                                              "1th" => "1 Thessalonians",
+                                              "2th" => "2 Thessalonians",
+                                              "1 th" => "1 Thessalonians",
+                                              "2 th" => "2 Thessalonians",
+                                              "1thes" => "1 Thessalonians",
+                                              "2thes" => "2 Thessalonians",
+                                              "1 thes" => "1 Thessalonians",
+                                              "2 thes" => "2 Thessalonians",
+                                              "1thess" => "1 Thessalonians",
+                                              "2thess" => "2 Thessalonians",
+                                              "1 thess" => "1 Thessalonians",
+                                              "2 thess" => "2 Thessalonians",
                                               "1tim" => "1 Timothy",
                                               "2tim" => "2 Timothy",
                                               "1 tim" => "1 Timothy",
                                               "2 tim" => "2 Timothy",
+                                              "1ti" => "1 Timothy",
+                                              "2ti" => "2 Timothy",
+                                              "1 ti" => "1 Timothy",
+                                              "2 ti" => "2 Timothy",
                                               "tit" => "Titus",
                                               "phn" => "Philemon",
                                               "heb" => "Hebrews",
+                                              "he" => "Hebrews",
                                               "jms" => "James",
                                               "jas" => "James",
                                               "1pet" => "1 Peter",
                                               "2pet" => "2 Peter",
                                               "1 pet" => "1 Peter",
                                               "2 pet" => "2 Peter",
+                                              "1Pe" => "1 Peter",
+                                              "2Pe" => "2 Peter",
+                                              "1 Pe" => "1 Peter",
+                                              "2 Pe" => "2 Peter",
                                               "1jn" => "1 John",
                                               "2jn" => "2 John",
                                               "3jn" => "3 John",
@@ -455,6 +486,7 @@
                                               "2 jno" => "2 John",
                                               "3 jno" => "3 John",
                                               "jud" => "Jude",
+                                              "re" => "Revelation",
                                               "rev" => "Revelation");
 
                     if (preg_match_all("/\ [0-9]+:/", $string_to_check) >= 1) {
