@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<HTML lang="en">
-    <HEAD>
+<html lang="en">
+    <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Bible search tool</title>
-        <STYLE type="text/css">
+        <style type="text/css">
 
         @font-face {
             font-family: "Code New Roman";
@@ -41,31 +41,31 @@
             display:       block;
             outline-style: hidden;
         }
-        </STYLE>
-    </HEAD>
-    <BODY>
-        <DIV id="search_form">
-        <SCRIPT>
+        </style>
+    </head>
+    <body>
+        <div id="search_form">
+        <script>
             document.write("<H2><A HREF=\"" + window.location.href + "\" style=\"text-decoration: none\">King James Version (Cambridge)</A></H2>");
-        </SCRIPT>
-        <UL id="search_help">
-            <LI>Search queries may be separated by semi-colons ";" (King of kings; John 3:16)</LI>
-            <LI>Ranges may be specified with either a dash "-" (Psalm 150:2-5)<BR>
-            or one or more commas "," (Psalm 150:1,3,5)</LI>
-            <LI>All-inclusive, out-of-order mode means that all words must be present but they can be in any order</LI>
-            <LI>Results will be in biblical order</LI>
-        </UL>
-        <FORM action="" method="post">
-            <INPUT type="text" name="criteria" value="" size=50 maxlength=255 autofocus>
-            <INPUT type="submit" name="submit" value="Find in Bible">
+        </script>
+        <ul id="search_help">
+            <li>Search queries may be separated by semi-colons ";" (King of kings; John 3:16)</li>
+            <li>Ranges may be specified with either a dash "-" (Psalm 150:2-5)<br>
+            or one or more commas "," (Psalm 150:1,3,5)</li>
+            <li>All-inclusive, out-of-order mode means that all words must be present but they can be in any order</li>
+            <li>Results will be in biblical order</li>
+        </ul>
+        <form action="" method="post">
+            <input type="text" name="criteria" value="" size=50 maxlength=255 autofocus>
+            <input type="submit" name="submit" value="Find in Bible">
 
-            <INPUT type="checkbox" id="casetoggle" name="casetoggle" value="false">
-            <LABEL for="casetoggle">Case-sensitive</LABEL>
+            <input type="checkbox" id="casetoggle" name="casetoggle" value="false">
+            <label for="casetoggle">Case-sensitive</label>
 
-            <INPUT type="checkbox" id="aiooo" name="aiooo" value="false">
-            <LABEL for="aiooo">All-inclusive, out-of-order</LABEL>
+            <input type="checkbox" id="aiooo" name="aiooo" value="false">
+            <label for="aiooo">All-inclusive, out-of-order</label>
 
-            <BR><BR>
+            <br><br>
             <?php
                 if (isset($_POST['submit'])) {
 
@@ -101,8 +101,8 @@
 
                     # quickly test features
                     if ($search_for == "debug") {
-                        echo "case_toggle: ", var_dump($case_toggle), "<BR>";
-                        echo "all_inclusive_toggle: ", var_dump($all_inclusive_toggle), "<BR>";
+                        echo "case_toggle: ", var_dump($case_toggle), "<br>";
+                        echo "all_inclusive_toggle: ", var_dump($all_inclusive_toggle), "<br>";
                         $search_for = "debug search string: used to run tests; my rock; James 1:10-5; sanctification; prince of peace; Mark 1:15,10,5; boaz; Joshua 1:1-1; John 3:16-17 3:17-16; Spirit of God; 3 john 1:7-11; king of kings; Genesis 1:1-10; and god saw; Cant 2:3,5,17,9; fowls; damsel; living; Ruth 2:; Romans 8:15-0; Obadiah 1:0-25; Joel 19; Nahum 3:3-9; Amos 3:3; Malachi 4:1-7; Jude 1:9-17";
                     }
 
@@ -111,13 +111,14 @@
                     # Book <one_space> Book#:Verse# <one_space> <verse>
                     $bible_text = "KJV-Cambridge_UTF-8_notes_removed_ule.txt";
 
-                    echo "Results for \"$search_for\"<BR><BR>";
+                    echo "Results for \"$search_for\"<br><br>";
 
                     # Support multiple searches per query, each seperated by a semi-colon ";"
                     # this foreach block will look for ranges of the format Book#:Verse#-Verse#
                     # and expand them (eg. Genesis 1:1-2 becomes Genesis 1:1; Genesis 1:2)
                     # Reverse order is also supported (eg. Genesis 1:2-1 becomes Genesis 1:1; Genesis 1:2)
                     foreach(explode(";", $search_for) as &$search) {
+                        $search = trim($search);
 
                         # support exactly one "dash" book#:verse#-verse# range or
                         # at least one "comma" book#:verse#,verse#,verse# separated list per group
@@ -125,7 +126,7 @@
 
                             # per group, ranges and commas together are not supported
                             if (strpos($search, "-") !== false && strpos($search, ",") !== false) {
-                                echo "Ranges \"-\" and commas \",\" cannot be combined ($search)<BR>";
+                                echo "Ranges \"-\" and commas \",\" cannot be combined ($search)<br>";
                                 continue;
                             }
 
@@ -244,7 +245,7 @@
 
                                     # If its too short, dont do anything
                                     if (strlen(trim($search_for)) <= 1) {
-                                        echo "Search criteria \"$search_for\" too short<BR>";
+                                        echo "Search criteria \"$search_for\" too short<br>";
                                         break 2;
                                     }
 
@@ -256,16 +257,16 @@
 
                                             # add a line break at the end. using this there
                                             # is no need wrap the output in <pre> tags
-                                            $new_line = str_replace("\n", "\n<BR>", $line);
+                                            $new_line = str_replace("\n", "\n<br>", $line);
 
                                             # Highlight search terms
                                             # preserve the original text since we are in case-insensitive mode
                                             $search_for_orig = substr($new_line, stripos($new_line, $search_for), strlen($search_for));
-                                            $new_line = preg_replace("/\b$search_for\b/i", "<SPAN style=\"background-color:lightgreen\">$search_for_orig</SPAN>", $new_line);
+                                            $new_line = preg_replace("/\b$search_for\b/i", "<span style=\"background-color:lightgreen\">$search_for_orig</span>", $new_line);
 
                                             # Bold book names - replace only the first occurance with bold
                                             if (strpos($new_line, $book) !== false) {
-                                                $new_line = preg_replace("/\b$book\b/", "<B>$book</B>", $new_line, 1);
+                                                $new_line = preg_replace("/\b$book\b/", "<b>$book</b>", $new_line, 1);
                                             }
 
                                             # word and character counts
@@ -288,15 +289,15 @@
                                         if (preg_match("/\b$search_for\b/", $line)) {
 
                                             # Change formatting to be more suitable for html output
-                                            $new_line = str_replace("\n", "\n<BR>", $line);
+                                            $new_line = str_replace("\n", "\n<br>", $line);
 
                                             # Highlight search terms
-                                            $new_line = preg_replace("/\b$search_for\b/", "<SPAN style=\"background-color:lightgreen\">$search_for</SPAN>", $new_line);
+                                            $new_line = preg_replace("/\b$search_for\b/", "<span style=\"background-color:lightgreen\">$search_for</span>", $new_line);
 
                                             # Bold book names - replace first occurance from the beginning with bold
                                             # preg_replace searches left to right, so we limit it to one replacement
                                             if (strpos($new_line, $book) !== false) {
-                                                $new_line = preg_replace("/\b$book\b/", "<B>$book</B>", $new_line, 1);
+                                                $new_line = preg_replace("/\b$book\b/", "<b>$book</b>", $new_line, 1);
                                             }
 
                                             # Output the result to the page
@@ -315,7 +316,10 @@
                                 # if it doesn't, skip to checking the next line from the file
                                 # if it does, continue onward to process the line and output it as a match
                                 foreach ($search_array as $search_for) {
+                                    if ($search_for == "") { continue; }
+
                                     foreach (explode(" ", $search_for) as $search_for_word) {
+                                        if ($search_for_word == "") { continue; }
 
                                         # determine case-sensitive status
                                         if ($case_toggle === true) {
@@ -345,19 +349,21 @@
                                 $new_line = $line;
                                 # highlight search words
                                 foreach ($search_array as $search_for) {
+                                    if ($search_for == "") { continue; }
                                     foreach (explode(" ", $search_for) as $search_for_word) {
+                                        if ($search_for_word == "") { continue; }
                                         if ($case_toggle === true) {
-                                            $new_line = preg_replace("/\b$search_for_word\b/", "<SPAN style=\"background-color:lightgreen\">$search_for_word</SPAN>", $new_line);
+                                            $new_line = preg_replace("/\b$search_for_word\b/", "<span style=\"background-color:lightgreen\">$search_for_word</span>", $new_line);
                                         } elseif ($case_toggle === false) {
                                             $search_for_orig = substr($new_line, stripos($new_line, $search_for_word), strlen($search_for_word));
-                                            $new_line = preg_replace("/\b$search_for_word\b/i", "<SPAN style=\"background-color:lightgreen\">$search_for_orig</SPAN>", $new_line);
+                                            $new_line = preg_replace("/\b$search_for_word\b/i", "<span style=\"background-color:lightgreen\">$search_for_orig</span>", $new_line);
                                         }
                                     }
                                 }
 
                                 # Bold book names - replace only first occurance with bold
                                 if (strpos($new_line, $book) !== false) {
-                                    $new_line = preg_replace("/\b$book\b/", "<B>$book</B>", $new_line, 1);
+                                    $new_line = preg_replace("/\b$book\b/", "<b>$book</b>", $new_line, 1);
                                 }
 
                                 # print the line as a match
@@ -368,22 +374,22 @@
                             }
                         }
                     } else {
-                        echo "File open error! ($bible_text)<BR>";
+                        echo "File open error! ($bible_text)<br>";
                     }
 
                     # Display a summary of the results based on the number of matches
                     # Zero
                     if ($match_count === 0) {
-                        echo "<P>No matches were found</P><BR>";
+                        echo "<p>No matches were found</p><br>";
                     }
                     # Exactly 1
                     if ($match_count === 1) {
-                        echo "<P>Found $match_count matching line</P><BR>";
+                        echo "<p>Found $match_count matching line</p><br>";
                     }
                     # More than 1
                     if ($match_count > 1) {
-                        echo "<P>Found $match_count matching lines</P><BR>";
-                        #echo "Shortest: $verse_min characters<BR>", "$verse_min_text";
+                        echo "<p>Found $match_count matching lines</p><br>";
+                        #echo "Shortest: $verse_min characters<br>", "$verse_min_text";
                     }
 
                     # Close the file that was opened for searching
@@ -391,6 +397,7 @@
                 }
 
                 function ExpandAbbreviatedBookNames($string_to_check) {
+                    $string_to_check = trim($string_to_check);
                     # Support abbreviated book names and variations
                     # eg. Jas = James, Hab = Habakkuk, Cant = Song of Solomon
                     $abbrev_booknames = array("ge" => "Genesis",
@@ -560,7 +567,7 @@
                     return $string_to_check;
                 }
             ?>
-        </FORM>
-        </DIV>
-    </BODY>
-</HTML>
+            </form>
+        </div>
+    </body>
+</html>
