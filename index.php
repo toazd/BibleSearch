@@ -52,13 +52,19 @@
             <LI>Search queries may be separated by semi-colons ";" (King of kings; John 3:16)</LI>
             <LI>Ranges may be specified with either a dash "-" (Psalm 150:2-5)<BR>
             or one or more commas "," (Psalm 150:1,3,5)</LI>
+            <LI>All-inclusive, out-of-order mode means that all words must be present but they can be in any order</LI>
             <LI>Results will be in biblical order</LI>
         </UL>
         <FORM action="" method="post">
             <INPUT type="text" name="criteria" value="" size=50 maxlength=255 autofocus>
             <INPUT type="submit" name="submit" value="Find in Bible">
-            <INPUT type="checkbox" id="casetoggle" name="casetoggle" value="FALSE">
+
+            <INPUT type="checkbox" id="casetoggle" name="casetoggle" value="false">
             <LABEL for="casetoggle">Case-sensitive</LABEL>
+
+            <INPUT type="checkbox" id="aiooo" name="aiooo" value="false">
+            <LABEL for="aiooo">All-inclusive, out-of-order</LABEL>
+
             <BR><BR>
             <?php
                 if (isset($_POST['submit'])) {
@@ -68,6 +74,13 @@
                         $case_toggle = true; # Yes
                     } else {
                         $case_toggle = false; # No/error/unknown/default
+                    }
+
+                    # WIP all inclusive, out-of-order mode
+                    if (isset($_POST['aiooo'])) {
+                        $all_inclusive_toggle = true; # Yes
+                    } else {
+                        $all_inclusive_toggle = false; # No/error/unknown/default
                     }
 
                     # Get the text to search for from the criteria input field
@@ -166,7 +179,7 @@
                     unset($search_for);
                     foreach ($search_array as &$search_for) {
                         #echo "Before: \"$search_for\"<BR>";
-                        $search_for = ExpandAbbreviatedBookName(trim($search_for));
+                        $search_for = ExpandAbbreviatedBookNames(trim($search_for));
                         #echo "After: \"$search_for\"<BR>";
                     }
 
@@ -190,8 +203,8 @@
 
                             # Remove brackets, for now
                             # they cause a lot of trouble when searching
-                            # for phrases and one word of the phrase has
-                            # brackets around it
+                            # for phrases and one or more words of the phrase
+                            # has brackets around it
                             $line = str_replace("[", "", $line);
                             $line = str_replace("]", "", $line);
 
@@ -218,96 +231,142 @@
                             }
                             */
 
-                            # iterate search_array one element at a time
-                            foreach($search_array as $search_for) {
+                            # All-inclusive, out-of-order mode means that two criterion must be met:
+                            # 1. all search words (delimited by spaces) must be present
+                            # 2. the words can appear in any order
+                            if ($all_inclusive_toggle === false) {
 
-                                # If its too short, dont do anything
-                                if (strlen(trim($search_for)) <= 1) {
-                                    echo "Search criteria \"$search_for\" too short<BR>";
-                                    break 2;
-                                }
+                                # iterate search_array one element at a time
+                                foreach($search_array as $search_for) {
 
-                                # remove all leading spaces
-                                while (substr($search_for, 0, 1) == " ") {
-                                    $search_for = substr($search_for, 1);
-                                }
-
-                                # replace double spaces with spaces, might not be needed anymore
-                                if (strpos($search_for, "  ") !== false) {
-                                    $search_for = str_replace("  ", " ", $search_for);
-                                }
-
-                                # Exact verse number matches
-                                # this is a good candidate for a toggle/option/checkbox for the user
-                                # append a space to the end if the search string ends with a number preceded by a colon (eg. :4)
-                                # otherwise, Genesis 1:1 will match Genesis 1:1 and also Genesis 1:13, Genesis 1:17, etc.
-                                # by adding the space Genesis 1:1 will only match against Genesis 1:1
-                                if (preg_match("/:[0-9]+$/", $search_for)) {
-                                    $search_for .= " ";
-                                }
-
-                                # Case in-sensitive
-                                if ($case_toggle === false) {
-
-                                    # if line contains search_for, case in-sensitive
-                                    if (stripos(preg_replace("/[\[\]]/","",$line), $search_for) !== false) {
-
-                                        # add a line break at the end. with this there
-                                        # is no need wrap the output in <pre> tags
-                                        $new_line = str_replace("\n", "\n<BR>", $line);
-
-                                        # Highlight search terms
-                                        # preserve the original text since we are in case-insensitive mode
-                                        $search_for_orig = substr($new_line, stripos($new_line, $search_for), strlen($search_for));
-                                        $new_line = substr_replace($new_line, "<SPAN style=\"background-color:lightgreen\">$search_for_orig</SPAN>", stripos($new_line, $search_for_orig), strlen($search_for_orig));
-
-                                        # Bold book names - replace only first occurance with bold
-                                        if (strpos($new_line, $book) !== false) {
-                                            $new_line = preg_replace("/$book/", "<B>$book</B>", $new_line, 1);
-                                        }
-
-                                        # word and character counts
-                                        #echo "(W", (count(explode(" ", $verse)) - 1), ")(C$verse_len)", "\t$new_line";
-
-                                        # Output the result to the page
-                                        echo "$new_line";
-
-                                        # Increment the match counter by 1
-                                        $match_count++;
-
-                                        # avoid outputting duplicate array matches by skipping to checking the next line instead of the rest of the search array
-                                        continue 2;
+                                    # If its too short, dont do anything
+                                    if (strlen(trim($search_for)) <= 1) {
+                                        echo "Search criteria \"$search_for\" too short<BR>";
+                                        break 2;
                                     }
-                                } elseif ($case_toggle === true) {
 
-                                    # Case sensitive
+                                    # replace double spaces with spaces
+                                    if (strpos($search_for, "  ") !== false) {
+                                        $search_for = str_replace("  ", " ", $search_for);
+                                    }
 
-                                    # if line contains search_for, case sensitive
-                                    if (strpos($line, $search_for) !== false) {
+                                    # Case in-sensitive
+                                    if ($case_toggle === false) {
 
-                                        # Change formatting to be more suitable for html output
-                                        # Outside of <pre> tags \n (the invisible control character new line) are not treated the same in html
-                                        $new_line = str_replace("\n", "\n<BR>", $line);
+                                        # if line contains search_for, case in-sensitive
+                                        if (preg_match("/\b$search_for\b/i", $line)) {
+                                        #if (stripos(preg_replace("/[\[\]]/", "", $line), $search_for) !== false) {
 
-                                        # Highlight search terms
-                                        $new_line = str_replace($search_for, "<SPAN style=\"background-color:lightgreen\">$search_for</SPAN>", $new_line);
+                                            # add a line break at the end. with this there
+                                            # is no need wrap the output in <pre> tags
+                                            $new_line = str_replace("\n", "\n<BR>", $line);
 
-                                        # Bold book names - replace first occurance from the beginning with bold
-                                        # preg_replace searches left to right, so we limit it to one replacement
-                                        if (strpos($new_line, $book) !== false) {
-                                            $new_line = preg_replace("/$book/", "<B>$book</B>", $new_line, 1);
+                                            # Highlight search terms
+                                            # preserve the original text since we are in case-insensitive mode
+                                            $search_for_orig = substr($new_line, stripos($new_line, $search_for), strlen($search_for));
+                                            $new_line = substr_replace($new_line, "<SPAN style=\"background-color:lightgreen\">$search_for_orig</SPAN>", stripos($new_line, $search_for_orig), strlen($search_for_orig));
+
+                                            # Bold book names - replace only first occurance with bold
+                                            if (preg_match("/\b$book\b/", $new_line)) {
+                                                $new_line = preg_replace("/\b$book\b/", "<B>$book</B>", $new_line, 1);
+                                            }
+
+                                            # word and character counts
+                                            #echo "(W", (count(explode(" ", $verse)) - 1), ")(C$verse_len)", "\t$new_line";
+
+                                            # Output the result to the page
+                                            echo "$new_line";
+
+                                            # Increment the match counter by 1
+                                            $match_count++;
+
+                                            # avoid outputting duplicate array matches by skipping to checking the next line instead of the rest of the search array
+                                            continue 2;
                                         }
+                                    } elseif ($case_toggle === true) {
 
-                                        # Output the result to the page
-                                        echo "$new_line";
+                                        # Case sensitive
 
-                                        # Increment the match counter by 1
-                                        $match_count++;
+                                        # if line contains search_for, case sensitive
+                                        if (preg_match("/\b$search_for\b/", $line)) {
 
-                                        # avoid outputting duplicate array matches by skipping to checking the next line instead of the rest of the search array
-                                        continue 2;
+                                            # Change formatting to be more suitable for html output
+                                            # Outside of <pre> tags \n (the invisible control character new line) are not treated the same in html
+                                            $new_line = str_replace("\n", "\n<BR>", $line);
+
+                                            # Highlight search terms
+                                            $new_line = preg_replace("/\b$search_for\b/", "<SPAN style=\"background-color:lightgreen\">$search_for</SPAN>", $new_line);
+
+                                            # Bold book names - replace first occurance from the beginning with bold
+                                            # preg_replace searches left to right, so we limit it to one replacement
+                                            if (preg_match("/\b$book\b/", $new_line)) {
+                                                $new_line = preg_replace("/\b$book\b/", "<B>$book</B>", $new_line, 1);
+                                            }
+
+                                            # Output the result to the page
+                                            echo "$new_line";
+
+                                            # Increment the match counter by 1
+                                            $match_count++;
+
+                                            # avoid outputting duplicate array matches by skipping to checking the next line instead of the rest of the search array
+                                            continue 2;
+                                        }
                                     }
                                 }
+                            } elseif ($all_inclusive_toggle === true) {
+                                # check if the line contains every search word
+                                # if it doesn't, skip to checking the next line from the file
+                                # if it does, continue onward to process the line and output it as a match
+                                foreach ($search_array as $search_for) {
+                                    foreach (explode(" ", $search_for) as $search_for_word) {
+
+                                        # determine case-sensitive status
+                                        if ($case_toggle === true) {
+                                            $pattern = "/\b$search_for_word\b/";
+                                        } elseif ($case_toggle === false) {
+                                            $pattern = "/\b$search_for_word\b/i";
+                                        }
+
+                                        if (preg_match($pattern, $line) == 0) {
+                                            # if any one word is not found in the line this isn't a match
+                                            # so skip to the next line from the file
+                                            continue 3;
+                                        }
+                                    }
+                                }
+
+                                # bold book names
+                                # Get book name and book number
+                                $book = substr($line, 0, strpos($line, ":"));
+                                #$book_num = substr($book, strrpos($book, " "));
+                                $book = substr($book, 0, strrpos($book, " "));
+
+                                # make a persistent copy to work with, otherwise
+                                # only the last word in the search criteria is highlighted
+                                $new_line = $line;
+                                # highlight search words
+                                foreach ($search_array as $search_for) {
+                                    foreach (explode(" ", $search_for) as $search_for_word) {
+                                        if ($case_toggle === true) {
+                                            $new_line = preg_replace("/\b$search_for_word\b/", "<SPAN style=\"background-color:lightgreen\">$search_for_word</SPAN>", $new_line);
+                                        } elseif ($case_toggle === false) {
+                                            $search_for_orig = substr($new_line, stripos($new_line, $search_for_word), strlen($search_for_word));
+                                            $new_line = preg_replace("/\b$search_for_word\b/i", "<SPAN style=\"background-color:lightgreen\">$search_for_orig</SPAN>", $new_line);
+                                        }
+                                    }
+                                }
+
+                                # Bold book names - replace only first occurance with bold
+                                if (strpos($new_line, $book) !== false) {
+                                    $new_line = preg_replace("/\b$book\b/", "<B>$book</B>", $new_line, 1);
+                                }
+
+                                # print the line as a match if it makes it this far
+                                echo "$new_line<BR>";
+
+                                # Increment the match counter by 1
+                                $match_count++;
                             }
                         }
                     } else {
@@ -333,7 +392,7 @@
                     fclose($handle);
                 }
 
-                function ExpandAbbreviatedBookName($string_to_check) {
+                function ExpandAbbreviatedBookNames($string_to_check) {
                     # Support abbreviated book names and variations
                     # eg. Jas = James, Hab = Habakkuk, Cant = Song of Solomon
                     $abbrev_booknames = array("ge" => "Genesis",
@@ -497,7 +556,7 @@
                         # If the abbreviated book name is found, replace it with the expanded version
                         if (array_key_exists($book, $abbrev_booknames)) {
                             # return the string given with the book name replaced
-                            return preg_replace("/$book/i", $abbrev_booknames[$book], $string_to_check, 1);
+                            return preg_replace("/\b$book\b/i", $abbrev_booknames[$book], $string_to_check, 1);
                         }
                     }
                     return $string_to_check;
