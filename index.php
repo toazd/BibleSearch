@@ -181,11 +181,9 @@
                     # turn the search criteria into an array, splitting at the semi-colons
                     $search_array = explode(";", $search_for);
 
-                    unset($search_for);
+                    unset($search_for); # just in case
                     foreach ($search_array as &$search_for) {
-                        #echo "Before: \"$search_for\"<BR>";
-                        $search_for = ExpandAbbreviatedBookNames(trim($search_for));
-                        #echo "After: \"$search_for\"<BR>";
+                        $search_for = ExpandAbbreviatedBookNames($search_for);
                     }
 
                     unset($search_for, $search, $book, $book_num, $pos, $range, $handle, $match_count, $line); # just in case
@@ -207,9 +205,7 @@
                             if (trim($line == "")) { continue; } # just in case
 
                             # Remove brackets, for now
-                            # they cause a lot of trouble when searching
-                            # for phrases and one or more words of the phrase
-                            # has brackets around it
+                            # they cause a lot of trouble with phrases
                             $line = str_replace("[", "", $line);
                             $line = str_replace("]", "", $line);
 
@@ -257,9 +253,8 @@
 
                                         # if line contains search_for, case in-sensitive
                                         if (preg_match("/\b$search_for\b/i", $line)) {
-                                        #if (stripos(preg_replace("/[\[\]]/", "", $line), $search_for) !== false) {
 
-                                            # add a line break at the end. with this there
+                                            # add a line break at the end. using this there
                                             # is no need wrap the output in <pre> tags
                                             $new_line = str_replace("\n", "\n<BR>", $line);
 
@@ -293,7 +288,6 @@
                                         if (preg_match("/\b$search_for\b/", $line)) {
 
                                             # Change formatting to be more suitable for html output
-                                            # Outside of <pre> tags \n (the invisible control character new line) are not treated the same in html
                                             $new_line = str_replace("\n", "\n<BR>", $line);
 
                                             # Highlight search terms
@@ -366,8 +360,8 @@
                                     $new_line = preg_replace("/\b$book\b/", "<B>$book</B>", $new_line, 1);
                                 }
 
-                                # print the line as a match if it makes it this far
-                                echo "$new_line<BR>";
+                                # print the line as a match
+                                echo "$new_line<br>";
 
                                 # Increment the match counter by 1
                                 $match_count++;
