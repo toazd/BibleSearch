@@ -102,6 +102,7 @@
                     # quickly test features
                     if ($search_for == "debug") {
                         echo "case_toggle: ", var_dump($case_toggle), "<BR>";
+                        echo "all_inclusive_toggle: ", var_dump($all_inclusive_toggle), "<BR>";
                         $search_for = "debug search string: used to run tests; my rock; James 1:10-5; sanctification; prince of peace; Mark 1:15,10,5; boaz; Joshua 1:1-1; John 3:16-17 3:17-16; Spirit of God; 3 john 1:7-11; king of kings; Genesis 1:1-10; and god saw; Cant 2:3,5,17,9; fowls; damsel; living; Ruth 2:; Romans 8:15-0; Obadiah 1:0-25; Joel 19; Nahum 3:3-9; Amos 3:3; Malachi 4:1-7; Jude 1:9-17";
                     }
 
@@ -135,6 +136,8 @@
                                 $book = substr($search, 0, strpos($search, ":"));
                                 $book_num = substr($book, strrpos($book, " "));
                                 $book = substr($book, 0, strrpos($book, " "));
+                                $book = trim($book);
+                                $book_num = trim($book_num);
 
                                 # Get the range by itself
                                 $range = substr($search, strpos($search, ":"));
@@ -158,6 +161,8 @@
                                 $book = substr($search, 0, strpos($search, ":"));
                                 $book_num = substr($book, strrpos($book, " "));
                                 $book = substr($book, 0, strrpos($book, " "));
+                                $book = trim($book);
+                                $book_num = trim($book_num);
 
                                 # expand comma seperated verses and append them to the search array
                                 # eg. James 1:5,6,22 => James 1:5, James 1:6, James 1:22
@@ -215,6 +220,8 @@
                             $book_num = substr($book, strrpos($book, " ")); # From here we can more easily grab the book number
                             # Step 2 Return a portion of $book starting at the beginning and ending at the first space encountered from the end
                             $book = substr($book, 0, strrpos($book, " "));
+                            $book = trim($book);
+                            $book_num = trim($book_num);
 
                             /*
                             # WIP feature
@@ -245,11 +252,6 @@
                                         break 2;
                                     }
 
-                                    # replace double spaces with spaces
-                                    if (strpos($search_for, "  ") !== false) {
-                                        $search_for = str_replace("  ", " ", $search_for);
-                                    }
-
                                     # Case in-sensitive
                                     if ($case_toggle === false) {
 
@@ -264,10 +266,10 @@
                                             # Highlight search terms
                                             # preserve the original text since we are in case-insensitive mode
                                             $search_for_orig = substr($new_line, stripos($new_line, $search_for), strlen($search_for));
-                                            $new_line = substr_replace($new_line, "<SPAN style=\"background-color:lightgreen\">$search_for_orig</SPAN>", stripos($new_line, $search_for_orig), strlen($search_for_orig));
+                                            $new_line = preg_replace("/\b$search_for\b/i", "<SPAN style=\"background-color:lightgreen\">$search_for_orig</SPAN>", $new_line);
 
-                                            # Bold book names - replace only first occurance with bold
-                                            if (preg_match("/\b$book\b/", $new_line)) {
+                                            # Bold book names - replace only the first occurance with bold
+                                            if (strpos($new_line, $book) !== false) {
                                                 $new_line = preg_replace("/\b$book\b/", "<B>$book</B>", $new_line, 1);
                                             }
 
@@ -299,7 +301,7 @@
 
                                             # Bold book names - replace first occurance from the beginning with bold
                                             # preg_replace searches left to right, so we limit it to one replacement
-                                            if (preg_match("/\b$book\b/", $new_line)) {
+                                            if (strpos($new_line, $book) !== false) {
                                                 $new_line = preg_replace("/\b$book\b/", "<B>$book</B>", $new_line, 1);
                                             }
 
@@ -341,6 +343,8 @@
                                 $book = substr($line, 0, strpos($line, ":"));
                                 #$book_num = substr($book, strrpos($book, " "));
                                 $book = substr($book, 0, strrpos($book, " "));
+                                $book = trim($book);
+                                #$book_num = trim($book_num);
 
                                 # make a persistent copy to work with, otherwise
                                 # only the last word in the search criteria is highlighted
