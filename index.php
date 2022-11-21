@@ -11,6 +11,33 @@
             src: url("Code New Roman.woff");
         }
 
+        .tooltip {
+          position: relative;
+          display: inline-block;
+          border-bottom: 1px dotted black;
+        }
+
+        .tooltip .tooltiptext {
+          visibility: hidden;
+          width: 120px;
+          background-color: black;
+          color: #fff;
+          text-align: center;
+          border-radius: 6px;
+          padding: 5px 0;
+
+          /* Position the tooltip */
+          position: absolute;
+          z-index: 1;
+          bottom: 100%;
+          left: 50%;
+          margin-left: -60px;
+        }
+
+        .tooltip:hover .tooltiptext {
+          visibility: visible;
+        }
+
         * {
             font-family: "Code New Roman";
         }
@@ -48,6 +75,7 @@
         <script>
             document.write("<H2><A HREF=\"" + window.location.href + "\" style=\"text-decoration: none\">King James Version (Cambridge)</A></H2>");
         </script>
+        <!--
         <ul id="search_help">
             <li>Ranges may be specified with either a dash "-" (Psalm 150:2-5)<br>
             or one or more commas "," (Psalm 150:1,3,5)</li>
@@ -55,73 +83,45 @@
             <li>Fuzzy matches attempts to match lines but allows missing and mispelled words</li>
             <li>Results will be in biblical order</li>
         </ul>
+        -->
+
         <form action="" method="post" name="search_form" enctype="text/plain accept-charset="UTF-8">
 
             <input type="text" name="criteria" value="" size=50 maxlength=255 autofocus>
-            <input type="submit" name="submit" value="Find in Bible">
-            <br><br>
-            <input type="checkbox" id="casetoggle" name="casetoggle" value="false">
-            <label for="casetoggle">Case-sensitive</label>
-
-            <input type="checkbox" id="aiooo" name="aiooo" value="false">
-            <label for="aiooo">Show out-of-order matches</label>
-
-            <input type="checkbox" id="fuzzy" name="fuzzy" value="false" checked>
-            <label for="fuzzy">Fuzzy matching</label>
+            <input type="submit" name="submit" value="Search">
 
             <br><br>
             <?php
+            # Have php output all errors to the page to ease testing
+            ini_set('display_errors', 1);
+            ini_set('display_startup_errors', 1);
+            error_reporting(E_ALL);
+
+#echo similar_text("teh", "the");
+#exit;
+
                 if (isset($_POST['submit'])) {
 
-                    # Determine case sensitivity based on the checkbox status
-                    if (isset($_POST['casetoggle'])) {
-                        $case_toggle = true; # Yes
-                    } else {
-                        $case_toggle = false; # No/error/unknown/default
-                    }
-
-                    # WIP all inclusive, out-of-order mode
-                    if (isset($_POST['aiooo'])) {
-                        $all_inclusive_toggle = true; # Yes
-                    } else {
-                        $all_inclusive_toggle = false; # No/error/unknown/default
-                    }
-
-                    # Fuzzy results
-                    if (isset($_POST['fuzzy'])) {
-                        $fuzzy_results_toggle = true; # Yes
-                    } else {
-                        $fuzzy_results_toggle = false; # No/error/unknown/default
-                    }
-
-                    # NOTE this is a reminder to implement this feature
-                    if ($case_toggle && $fuzzy_results_toggle) {
-                        echo "Fuzzy results currently does not support case-sensitive mode<br>";
-                        exit;
-                    }
+                    $start_time = microtime(true);
 
                     # Get the text to search for from the criteria input field
                     $search_for = $_POST['criteria'];
 
-                    # remove double quotes
-                    if (strpos($search_for, "\"") !== false) {
-                        $search_for = str_replace("\"", "", $search_for);
-                    }
 
-                    # remove single quotes
-                    if (strpos($search_for, "\'") !== false) {
-                        $search_for = str_replace("\'", "", $search_for);
-                    }
+                    # remove punctuation that are also regex modifiers
+                    $search_for = preg_replace("/[\(\)\'\"\[\]]/", "", $search_for);
 
-                    # If the search criteria contains only whitespace and/or control characters, exit
-                    if (trim($search_for) == "") { exit; }
+                    # if the search criteria is too short, display an error
+                    if (strlen(trim($search_for)) <= 3) {
+                        ExitWithException("Search criteria \"$search_for\" too short");
+                    }
 
                     # Bible text used to search.
                     # Each line follows the following format:
                     # Book <one_space> Book#:Verse# <one_space> <verse>
                     $bible_text = "KJV-Cambridge_UTF-8_notes_removed_ule.txt";
 
-                    echo "Results for \"$search_for\"<br><br>";
+                    echo "<u>Exact matches for \"$search_for\"</u><br><br>";
 
                     # expand book name abbreviations
                     $search_for = ExpandAbbreviatedBookNames($search_for);
@@ -136,12 +136,12 @@
 
                         # get one line at a time from the file
                         while (($line = fgets($handle)) !== false) {
-
+# TESTING ONLY
+#if (!preg_match("/Ezekiel 16:/i", $line)) { continue; }
                             # if the line is empty or contains only control characters, skip it
-                            if (trim($line) == "") { continue; } # just in case
+                            #if (trim($line) == "") { continue; } # just in case
 
-                            # Remove brackets, for now
-                            # they cause a lot of trouble with phrases
+                            # Remove brackets originally used to indicate italics
                             $line = str_replace("[", "", $line);
                             $line = str_replace("]", "", $line);
 
@@ -155,180 +155,206 @@
                             $book = trim($book);
                             $book_num = trim($book_num);
 
-                            # All-inclusive, out-of-order mode means that two criterion must be met:
-                            # 1. all search words (delimited by spaces) must be present
-                            # 2. the words can appear in any order
-                            if ($all_inclusive_toggle === false) {
+                            ############################
+                            # perform a "normal" search and if no results are found then attmept to find fuzzy matches
+                            # a normal search is whole words only, case-insensitive, in-order
+                            ############################
 
-                                # If its too short, dont do anything
-                                if (strlen(trim($search_for)) <= 1) {
-                                    echo "Search criteria \"$search_for\" too short<br>";
-                                    break;
-                                }
+                            # if the last character is a punctuation mark, don't use a trailing word boundary for matching
+                            # to avoid checking for a double word boundary for search criteria such as "night;"
+                            #if (preg_match("/[[:punct:]]$/", $search_for)) {
+                            #    $pattern = "/\b$search_for/i";
+                            #} else {
+                            #    $pattern = "/\b$search_for\b/i";
+                            #}
+                            $pattern = "/\b$search_for\b/i";
+                            # if line contains the pattern
+                            if (preg_match($pattern, $line)) {
 
-                                # Case in-sensitive
-                                if ($case_toggle === false) {
+                                # add a line break at the end. using this there
+                                # is no need wrap the output in <pre> tags
+                                $new_line = str_replace("\n", "<br>", $line);
 
-                                    # Fuzzy matching testing
-                                    if ($fuzzy_results_toggle === true) {
-                                        $search_array = explode(" ", $search_for);
-                                        $search_word_count = count($search_array);
-                                        $search_for_words_in_line_count = 0;
+                                # Highlight search terms
+                                # preserve the original text since we are in case-insensitive mode
+                                $search_for_orig = substr($new_line, stripos($new_line, $search_for), strlen($search_for));
+                                $new_line = preg_replace($pattern, "<span style=\"background-color:lightgreen\">$search_for_orig</span>", $new_line);
 
-                                        $line_word_count = explode(" ", $line);
-
-                                        foreach($search_array as $search_for_word) {
-                                            if (preg_match("/\b$search_for_word\b/", $line)) {
-                                                $search_for_words_in_line_count += 1;
-                                            }
-                                        }
-
-                                        $search_words_in_line_ratio = ($search_for_words_in_line_count / $search_word_count);
-                                        if ($search_words_in_line_ratio > 0.50) {
-                                        #if ($search_for_words_in_line_count >= 6) {
-                                            $new_line = preg_replace("/\b$book\b/", "<b>$book</b>", $line, 1);
-
-                                            echo "($search_words_in_line_ratio) $new_line<br>";
-                                            $match_count += 1;
-                                        }
-                                    } elseif ($fuzzy_results_toggle === false) {
-                                        # if line contains search_for, case in-sensitive
-                                        if (preg_match("/\b$search_for\b/i", $line)) {
-
-                                            # add a line break at the end. using this there
-                                            # is no need wrap the output in <pre> tags
-                                            $new_line = str_replace("\n", "\n<br>", $line);
-
-                                            # Highlight search terms
-                                            # preserve the original text since we are in case-insensitive mode
-                                            $search_for_orig = substr($new_line, stripos($new_line, $search_for), strlen($search_for));
-                                            $new_line = preg_replace("/\b$search_for\b/i", "<span style=\"background-color:lightgreen\">$search_for_orig</span>", $new_line);
-
-                                            # Bold book names - replace only the first occurance with bold
-                                            #if (strpos($new_line, $book) !== false) {
-                                            $new_line = preg_replace("/\b$book\b/", "<b>$book</b>", $new_line, 1);
-                                            #}
-
-                                            # Output the result to the page
-                                            echo "$new_line";
-
-                                            # Increment the match counter by 1
-                                            $match_count++;
-
-                                            # avoid outputting duplicate array matches by skipping to checking the next line instead of the rest of the search array
-                                            continue;
-                                        }
-                                    }
-                                } elseif ($case_toggle === true) {
-
-                                    # Case sensitive
-
-                                    # if line contains search_for, case sensitive
-                                    if (preg_match("/\b$search_for\b/", $line)) {
-
-                                        # Change formatting to be more suitable for html output
-                                        $new_line = str_replace("\n", "\n<br>", $line);
-
-                                        # Highlight search terms
-                                        $new_line = preg_replace("/\b$search_for\b/", "<span style=\"background-color:lightgreen\">$search_for</span>", $new_line);
-
-                                        # Bold book names - replace first occurance from the beginning with bold
-                                        # preg_replace searches left to right, so we limit it to one replacement
-                                        #if (strpos($new_line, $book) !== false) {
-                                        $new_line = preg_replace("/\b$book\b/", "<b>$book</b>", $new_line, 1);
-                                        #}
-
-                                        # Output the result to the page
-                                        echo "$new_line";
-
-                                        # Increment the match counter by 1
-                                        $match_count++;
-
-                                        # avoid outputting duplicate array matches by skipping to checking the next line instead of the rest of the search array
-                                        continue;
-                                    }
-                                }
-                            } elseif ($all_inclusive_toggle === true) {
-                                # check if the line contains every search word
-                                # if it doesn't, skip to checking the next line from the file
-                                # if it does, continue onward to process the line and output it as a match
-                                foreach (explode(" ", $search_for) as $search_for_word) {
-                                    if ($search_for_word == "") { continue; }
-
-                                    # determine case-sensitive status
-                                    if ($case_toggle === true) {
-                                        $pattern = "/\b$search_for_word\b/";
-                                    } elseif ($case_toggle === false) {
-                                        $pattern = "/\b$search_for_word\b/i";
-                                    }
-
-                                    if (preg_match($pattern, $line) == 0) {
-                                        # if any one word is not found in the line this isn't a match
-                                        # so skip to the next line from the file
-                                        continue 2;
-                                    }
-                                }
-
-                                # bold book names
-                                # Get book name and book number
-                                $book = substr($line, 0, strpos($line, ":"));
-                                #$book_num = substr($book, strrpos($book, " "));
-                                $book = substr($book, 0, strrpos($book, " "));
-                                $book = trim($book);
-                                #$book_num = trim($book_num);
-
-                                # make a persistent copy to work with, otherwise
-                                # only the last word in the search criteria is highlighted
-                                $new_line = $line;
-                                # highlight search words
-                                foreach (explode(" ", $search_for) as $search_for_word) {
-                                    if ($search_for_word == "") { continue; }
-                                    if ($case_toggle === true) {
-                                        $new_line = preg_replace("/\b$search_for_word\b/", "<span style=\"background-color:lightgreen\">$search_for_word</span>", $new_line);
-                                    } elseif ($case_toggle === false) {
-                                        # preserve the original text so it doesn't get replaced with the correct text but the wrong case pattern
-                                        $search_for_orig = substr($new_line, stripos($new_line, $search_for_word), strlen($search_for_word));
-                                        $new_line = preg_replace("/\b$search_for_word\b/i", "<span style=\"background-color:lightgreen\">$search_for_orig</span>", $new_line);
-                                    }
-                                }
-
-                                # Bold book names - replace only first occurance with bold
-                                #if (strpos($new_line, $book) !== false) {
+                                # Bold book names - replace only the first occurance with bold
                                 $new_line = preg_replace("/\b$book\b/", "<b>$book</b>", $new_line, 1);
-                                #}
 
-                                # print the line as a match
+                                # Output the result to the page
                                 echo "$new_line<br>";
 
                                 # Increment the match counter by 1
                                 $match_count++;
+
                             }
                         }
-                    } else {
-                        echo "File open error! ($bible_text)<br>";
-                    }
-
-                    # Display a summary of the results based on the number of matches
-                    # Zero
-                    if ($match_count === 0) {
-                        echo "<p>No matches were found</p><br>";
-                    }
-                    # Exactly 1
-                    if ($match_count === 1) {
-                        echo "<p>Found $match_count matching line</p><br>";
-                    }
-                    # More than 1
-                    if ($match_count > 1) {
-                        echo "<p>Found $match_count matching lines</p><br>";
-                        #echo "Shortest: $verse_min characters<br>", "$verse_min_text";
                     }
 
                     # Close the file that was opened for searching
                     fclose($handle);
+
+                    # if at least one exact match was found, display the result
+                    if ($match_count > 0) {
+                        # Display a summary of the results based on the number of matches
+                        # Exactly 1
+                        if ($match_count == 1) {
+                            echo "<p>Found $match_count exact match</p><br>";
+                        }
+                        # More than 1
+                        if ($match_count > 1) {
+                            echo "<p>Found $match_count exact matches</p><br>";
+                        }
+                    # if no exact matches were found, attempt fuzzy matches
+                    } elseif ($match_count == 0) {
+
+                        echo "No exact matches found<br><br>";
+
+                        # open the file of the text to search read only
+                        $handle = @fopen($bible_text, "r");
+
+                        #echo "<u>Near matches for \"$search_for\"</u><br><br>";
+                        echo "<u>Near matches</u><br><br>";
+
+                        if ($handle) {
+
+                            $match_rank_array = [];
+
+                            # get one line at a time from the file
+                            while (($line = fgets($handle)) !== false) {
+# TESTING ONLY
+#if (!preg_match("/Ezekiel 16:23/i", $line)) { continue; }
+
+                                # Remove brackets originally used to indicate italics
+                                $line = str_replace("[", "", $line);
+                                $line = str_replace("]", "", $line);
+
+                                # Fuzzy matching testing
+                                $search_array = explode(" ", $search_for);
+                                $search_word_count = count($search_array);
+                                $search_for_words_in_line_count = 0;
+                                $line_word_count = count(explode(" ", $line));
+                                $new_line = $line;
+                                $exact_match_count = 0;
+                                $fuzzy_match_count = 0;
+                                $check_words = "";
+
+                                # FUZZY MATCH - IN-ORDER/PARTIAL IN-ORDER
+
+                                # FUZZY MATCH - OUT-OF-ORDER
+                                # check every search word against every verse word and try to catch mispellings and close matches
+                                foreach($search_array as $search_for_word) {
+                                    foreach (explode(" ", $new_line) as $line_word) {
+                                        #remove punctuation
+                                        $line_word = preg_replace("/[[:punct:]]/", "", $line_word);
+                                        $line_word = trim($line_word);
+
+                                        $pattern = "/\b" . preg_replace("/[[:punct:]]/", "", $line_word) . "\b/i";
+                                        # exact word match
+                                        if (preg_match("/\b$search_for_word\b/i", $line_word)) {
+                                            #echo "Exact word match: \"$search_for_word\" to \"$line_word\"<br>";
+                                            #echo "pattern: $pattern<br>";
+                                            $new_line = preg_replace($pattern, "<span style=\"background-color:lightgreen\">$line_word</span>", $new_line);
+                                            $exact_match_count += 1;
+                                            $search_for_words_in_line_count += 1;
+                                            $check_words = $check_words . " " . $line_word;
+                                            continue 2;
+                                        }
+
+                                        # WARNING this can't be here
+                                        # don't fuzzy match 3 or less words, too many matches
+                                        #if ($search_word_count <= 3) { continue; }
+
+                                        # fuzzy word match
+                                        # don't match to words that are too significantly different
+                                        if (strlen($line_word) < (1.3 * strlen($search_for_word))) {
+                                            # if the words are similar
+                                            if (similar_text(strtolower($search_for_word), strtolower($line_word)) >= (0.66 * strlen($search_for_word))) {
+                                                #echo "Near match: \"$search_for_word\" to \"$line_word\"<br>";
+                                                $new_line = preg_replace($pattern, "<div class=\"tooltip\" style=\"background-color:lightgreen\">$line_word<span class=\"tooltiptext\">$search_for_word</span></div>", $new_line);
+                                                $fuzzy_match_count += 1;
+                                                $search_for_words_in_line_count += 1;
+                                                $check_words = $check_words . " " . $line_word;
+                                                continue 2;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                $total_matches = $exact_match_count + $fuzzy_match_count;
+                                $threshold = round(0.66 * $search_word_count, 0, PHP_ROUND_HALF_DOWN);
+                                if ($total_matches >= $threshold) {
+                                    #if (stripos($line, trim($check_words)) !== false) {
+                                        # bold book names
+                                        $book = substr($line, 0, strpos($line, ":"));
+                                        $book = substr($book, 0, strrpos($book, " "));
+                                        $new_line = preg_replace("/\b$book\b/", "<b>$book</b>", $new_line, 1);
+
+                                        #echo "(", trim($check_words), ") $new_line<br>";
+                                        #echo "($total_matches/$threshold) $new_line<br>";
+                                        # Add to ranking array
+                                        $rank_element = $total_matches . " " . $new_line;
+                                        $match_rank_array[] = $rank_element;
+                                        $match_count += 1;
+                                    #}
+                                } else {
+                                    #echo "matches: ", $exact_match_count + $fuzzy_match_count, "<br>";
+                                    #echo "thresh: ", round(0.33 * $search_word_count, 0, PHP_ROUND_HALF_DOWN), "<br>";
+                                }
+                            }
+                        }
+
+                        # print the results in decending order (closet match first)
+                        if (count($match_rank_array) > 1) {
+                            rsort($match_rank_array);
+                            foreach($match_rank_array as $match_element) {
+                                echo substr($match_element, strpos($match_element, " ")), "<br><br>";
+                                #echo "$match_element<br><br>";
+                            }
+                        }
+
+                        fclose($handle);
+
+                        # if at least one fuzzy match was found, display the result
+                        if ($match_count > 0) {
+                            # Display a summary of the results based on the number of matches
+                            # Exactly 1
+                            if ($match_count == 1) {
+                                echo "<p>Found $match_count near match</p><br>";
+                            }
+                            # More than 1
+                            if ($match_count > 1) {
+                                echo "<p>Found $match_count near matches</p><br>";
+                            }
+                        } else {
+                            echo "No near matches found<br><br>";
+                        }
+                    }
+                    $end_time = microtime(true);
+
+                    echo "Finished in ", round($end_time - $start_time, 3), " seconds<br>";
+                }
+
+                function ExitWithException($message) {
+                    if (strlen(trim($message)) > 3) {
+                        echo "$message<br>";
+                        exit;
+                    } else { exit; }
+                }
+
+                function RemoveTrailingPuncMarks($string) {
+                    $string = trim($string);
+                    while (preg_match("/[[:punct:]]$/", $string)) {
+                        $string = substr($string, 0, (strlen($string) - 1));
+                    }
+                    return $string;
                 }
 
                 function ExpandAbbreviatedBookNames($string_to_check) {
                     $string_to_check = trim($string_to_check);
+                    #echo "Before: \"$string_to_check\"<br>";
                     # Support abbreviated book names and variations
                     # eg. Jas = James, Hab = Habakkuk, Cant = Song of Solomon
                     $abbrev_booknames = array("ge" => "Genesis",
@@ -399,8 +425,8 @@
                                               "mic" => "Micah",
                                               "na" => "Nahum",
                                               "nah" => "Nahum",
-                                              "ha" => "Habakkuk",
-                                              "hab" => "Habakkuk",
+                                              "ha" => "Habbakkuk",
+                                              "hab" => "Habbakkuk",
                                               "ze" => "Zephaniah",
                                               "zep" => "Zephaniah",
                                               "hag" => "Haggai",
@@ -491,12 +517,18 @@
                         $book = substr($string_to_check, 0, strpos($string_to_check, ":"));
                         $book = substr($book, 0, strrpos($book, " "));
                         $book = strtolower(trim($book));
+                        #echo "Checking array for: \"$book\"<br>";
                         # If the abbreviated book name is found, replace it with the expanded version
                         if (array_key_exists($book, $abbrev_booknames)) {
                             # return the string given with the book name replaced
-                            return preg_replace("/\b$book\b/i", $abbrev_booknames[$book], $string_to_check, 1);
+                            $string_to_check = preg_replace("/\b$book\b/i", $abbrev_booknames[$book], $string_to_check, 1);
+                            #echo "After: \"$string_to_check\"<br>";
+                            return $string_to_check;
+                        } else {
+                            #echo "Key Not found: \"$book\"<br>";
                         }
                     }
+                    #echo "After: \"$string_to_check\"<br>";
                     return $string_to_check;
                 }
             ?>
