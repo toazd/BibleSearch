@@ -53,3 +53,46 @@ foreach($search_array as $search_for_word) {
         }
     }
 ###################################################################################
+function CheckConsecutiveSubstringsOld($needle, $haystack, &$replacement_count) {
+    # check if haystack contains any consecutive substrings from needle
+    # NOTE min=2 words, max= (searchwordcount -1) words
+    #
+    # starting from the END of the search string subtract one word at a time
+    # and check if the resulting substring is in haystack
+    $search_array = explode(" ", $needle);
+    $search_word_count = count($search_array);
+    $search_upper_limit = ($search_word_count - 1);
+    $new_line = $haystack;
+    $count_end = 0;
+    $count_beg = 0;
+
+    $substr_end = trim(substr($needle, 0, strrpos($needle, " ")));
+    $substr_beg = trim(substr($needle, strpos($needle, " ")));
+    #$word_count_end = count(explode(" ", $substr_end));
+    $word_count = count(explode(" ", $substr_beg));
+    while ($word_count >= 2 && $word_count <= $search_upper_limit) {
+
+        if (preg_match("/\b$substr_beg\b/i", $haystack)) {
+            $new_line = preg_replace("/\b$substr_beg\b/i", HighlightNoTooltip($new_line, $substr_beg), $new_line, -1, $count_beg);
+        }
+
+        if (preg_match("/\b$substr_end\b/i", $haystack)) {
+            $new_line = preg_replace("/\b$substr_end\b/i", HighlightNoTooltip($new_line, $substr_end), $new_line, -1, $count_end);
+        }
+
+        # subtract one word from the beginning
+        $substr_beg = trim(substr($substr_beg, strpos($substr_beg, " ")));
+
+        # subtract one word from the end
+        $substr_end = trim(substr($substr_end, 0, strrpos($substr_end, " ")));
+        # update word count
+        #$word_count_end = count(explode(" ", $substr_end));
+        # update word count
+        $word_count = count(explode(" ", $substr_beg));
+    }
+
+    $replacement_count = ($count_end + $count_beg);
+
+    return $new_line;
+}
+
