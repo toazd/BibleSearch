@@ -430,6 +430,8 @@ function ExactMatchCaseInsensitive(&$exact_match_count, &$exact_match_results) {
                     $new_line = HighlightNoTooltip($new_line, $word);
                 }
 
+                $new_line = BoldBookName($new_line);
+
                 $exact_match_results = $exact_match_results . $new_line;
 
                 # Increment the match counter by 1
@@ -626,6 +628,8 @@ function HighlightNoTooltip($line, $term) {
 
 function BoldBookName($line) {
 #<span class="highlight">Genesis</span> 40:<span class="highlight">1</span> And it came to pass after these things, <i> that </i> the butler of the king of Egypt and <i> his </i> baker had offended their lord the king of Egypt.<br>
+
+    #TODO needs fixed
     return $line;
 
     $space_after_colon_pos = strpos($line, ":") + 1;
