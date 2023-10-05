@@ -629,16 +629,21 @@ function HighlightNoTooltip($line, $term) {
 function BoldBookName($line) {
 #<span class="highlight">Genesis</span> 40:<span class="highlight">1</span> And it came to pass after these things, <i> that </i> the butler of the king of Egypt and <i> his </i> baker had offended their lord the king of Egypt.<br>
 
-    #TODO needs fixed
+    #TODO needs fixed and finished
     return $line;
 
-    $space_after_colon_pos = strpos($line, ":") + 1;
+    $space_after_colon_pos = strpos($line, ":");
+    $space_after_colon_pos = strpos($line, " ", $space_after_colon_pos);
 
     $book = substr($line, 0, $space_after_colon_pos);
     # Replace only the first occurance
 
     $line = substr_replace($line, "<br><b>$book</b><br><div class=\"verse\">", 0, strlen($book));
+    #$line = substr_replace($line, "<b>$book</b><div class=\"verse\">", 0, strlen($book));
     $line = substr_replace($line, "</div>", strlen($line));
+
+    # plain
+    #$line = substr_replace($line, "<b>$book</b>", 0, strlen($book));
 
     return $line;
 }
