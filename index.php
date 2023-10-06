@@ -54,7 +54,7 @@ p {
     font-weight: bold;
 }
 
-span { font-size: 16px; }
+/*span { font-size: 16px; }*/
 
 hr { width: 50%; }
 
@@ -118,15 +118,19 @@ a {
     color: black;
 }
 
-div.verse {
+/*
+span.verse {
     padding-left: 1em;
     line-height: 1;
-    /*text-indent: -1em;*/
+    padding-left: 1.5em;
+    text-indent:-1.5em;
+    padding-left: 1.5em;
 }
+*/
 
 a.top {
   text-decoration: none;
-  padding: 10px;
+  padding: 15px;
   /*font-family: sans-serif;*/
   color: #000;
   background: #fff;
@@ -136,26 +140,13 @@ a.top {
   place-self: end;
   margin-top: 100vh;
   white-space: nowrap;
-  font-size: 18px;
+  font-size: 20px;
 }
-
-/*
-i {
-    font-weight: lighter;
-}
-*/
 
 </style>
 </head>
 <body>
 <div id="search_form">
-
-<!-- NOTE don't use javascript if not needed -->
-<!--
-<script>
-document.write("<H2><A HREF=\"" + window.location.href + "\" style=\"text-decoration: none\">King James Version (Cambridge)</A></H2>");
-</script>
--->
 
 <form action="" method="post" name="search_form" enctype="text/plain accept-charset="UTF-8">
 
@@ -258,12 +249,13 @@ if (isset($_POST['submit_button'])) {
         ExitWithException("You must enable at least one search method to get any results.");
     }
 
+    # TODO finish
     # If a potential range of books or verses is supplied, switch to only exact match mode
     # 1 cor 1:3,4
     # 1 cor 1:3-6
     # 1 cor 1-4
     if (preg_match("/[0-9]{1,3}:[0-9]{1,3}[,-][0-9]{1,3}|[0-9]{1,3}\-[0-9]{1,3}/", $search_for)) {
-        echo "Range detected<br>";
+        echo "Range detected. Support for ranges has not yet been fully implemented.<br>";
         $exact_matches_option = true;
         $partial_matches_option = false;
         $near_matches_option = false;
@@ -275,7 +267,7 @@ if (isset($_POST['submit_button'])) {
     # Bible text used to search.
     # Each line follows the following format:
     # Book <one_space> Book#:Verse# <one_space> <verse (square brackets for italics)>
-    $bible_text = "KJV-Cambridge_UTF-8_notes_removed_ule.txt";
+    $bible_text = "KJV-Cambridge_UTF-8_notes_and_italics_removed_ule.txt";
 
     # expand book name abbreviations into their names in the bible text used to search
     # eg. ex => Exodus, gen => Genesis
@@ -425,10 +417,11 @@ function ExactMatchCaseInsensitive(&$exact_match_count, &$exact_match_results) {
                     $new_line = str_replace("\n", "<br>", $new_line);
                 }
 
-                $search_array = explode(" ", $search_for);
-                foreach ($search_array as $word) {
-                    $new_line = HighlightNoTooltip($new_line, $word);
-                }
+                #$search_array = explode(" ", $search_for);
+                #foreach ($search_array as $word) {
+                #    $new_line = HighlightNoTooltip($new_line, $word);
+                #}
+                $new_line = HighlightNoTooltip($new_line, $search_for);
 
                 $new_line = BoldBookName($new_line);
 
@@ -606,15 +599,39 @@ function CheckForConsecutiveSubstrings($needle, $haystack, &$replacement_count) 
 
 function HighlightNoTooltip($line, $term) {
 
+    #TODO needs fixed and finished
+    return $line;
+
+    # Don't highlight booknames
+    # support for "Mt 20"
+    $checkterm = substr($term, 0, strpos($term, ' '));
+    # support for "Mt", "mark"
+    if ($checkterm == '') { $checkterm = $term; }
+
+    echo "checkterm: $checkterm<br>";
+
+    $checkline = substr($line, 0, strlen($checkterm));
+    echo "subline:   ", substr($line, 0, strlen($checkterm)), "<br>";
+
+    if (IsABookName($checkterm)) {
+        if (IsABookName($checkline)) {
+            return $line;
+        }
+    }
+
     $highlight = "<span class=\"highlight\">";
 
     #echo "Highlighting before: \"$term\" in \"$line\"<br>";
 
     # get the position where the string to be highlighted begins
-    $term_beg = stripos($line, $term);
+    $term_beg = stripos(strip_tags($line), $term);
+
+    #echo "term_begin: $term_beg<br>$line<br>$term<br>";
 
     # get the position where the highlighting should end
     $term_end = $term_beg + strlen($term) + strlen($highlight);
+
+    #echo "term_end: $term_end<br>";
 
     $line = substr_replace($line, $highlight, $term_beg, 0);
     $line = substr_replace($line, "</span>", $term_end, 0);
@@ -630,7 +647,7 @@ function BoldBookName($line) {
 #<span class="highlight">Genesis</span> 40:<span class="highlight">1</span> And it came to pass after these things, <i> that </i> the butler of the king of Egypt and <i> his </i> baker had offended their lord the king of Egypt.<br>
 
     #TODO needs fixed and finished
-    return $line;
+    #return $line;
 
     $space_after_colon_pos = strpos($line, ":");
     $space_after_colon_pos = strpos($line, " ", $space_after_colon_pos);
@@ -638,9 +655,12 @@ function BoldBookName($line) {
     $book = substr($line, 0, $space_after_colon_pos);
     # Replace only the first occurance
 
-    $line = substr_replace($line, "<br><b>$book</b><br><div class=\"verse\">", 0, strlen($book));
-    #$line = substr_replace($line, "<b>$book</b><div class=\"verse\">", 0, strlen($book));
-    $line = substr_replace($line, "</div>", strlen($line));
+    #$line = substr_replace($line, "<br><b>$book</b><br><div class=\"verse\">", 0, strlen($book));
+    # OR
+    $line = substr_replace($line, "<b>$book</b><span class=\"verse\">", 0, strlen($book));
+
+    # THEN
+    $line = substr_replace($line, "</span>", strlen($line));
 
     # plain
     #$line = substr_replace($line, "<b>$book</b>", 0, strlen($book));
@@ -866,7 +886,7 @@ function ExpandAbbreviatedBookNames($string_to_check) {
 
     return $string_to_check;
 
-    # OLD do not use, only here for reference
+    #WARNING, OLD do not use, only here for reference
     if (1 > 2) {
         if (preg_match_all("/\b[0-9]{1,3}:/", $string_to_check) >= 1) {
             # Get the book name and wrangle it to match the format of the keys of the abbreviated book names array
@@ -890,6 +910,86 @@ function ExpandAbbreviatedBookNames($string_to_check) {
 }
 
 ################################################################################
+
+function IsABookName($term) {
+
+    $booknames = array("Genesis",
+                       "Exodus",
+                       "Leviticus",
+                       "Numbers",
+                       "Deuteronomy",
+                       "Joshua",
+                       "Judges",
+                       "Ruth",
+                       "1 Samuel",
+                       "2 Samuel",
+                       "1 Kings",
+                       "2 Kings",
+                       "1 Chronicles",
+                       "2 Chronicles",
+                       "Ezra",
+                       "Nehemiah",
+                       "Esther",
+                       "Psalms",
+                       "Proverbs",
+                       "Ecclesiastes",
+                       "Song of Solomon",
+                       "Isaiah",
+                       "Jeremiah",
+                       "Lamentations",
+                       "Ezekiel",
+                       "Daniel",
+                       "Hosea",
+                       "Joel",
+                       "Amos",
+                       "Obadiah",
+                       "Jonah",
+                       "Micah",
+                       "Nahum",
+                       "Habbakkuk",
+                       "Zephaniah",
+                       "Haggai",
+                       "Zechariah",
+                       "Malachi",
+                       "Matthew",
+                       "Mark",
+                       "Luke",
+                       "John",
+                       "Acts",
+                       "Romans",
+                       "1 Corinthians",
+                       "2 Corinthians",
+                       "Galations",
+                       "Galations",
+                       "Ephesians",
+                       "Philippians",
+                       "Colossians",
+                       "1 Thessalonians",
+                       "2 Thessalonians",
+                       "1 Timothy",
+                       "2 Timothy",
+                       "Titus",
+                       "Philemon",
+                       "Hebrews",
+                       "James",
+                       "1 Peter",
+                       "2 Peter",
+                       "1 John",
+                       "2 John",
+                       "3 John",
+                       "Jude",
+                       "Revelation");
+
+    foreach ($booknames as $value) {
+        if (strtolower($value) == strtolower($term)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+################################################################################
+
 ?>
 </form>
 </div>
