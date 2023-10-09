@@ -240,7 +240,7 @@ if (isset($_POST['submit_button'])) {
     }
 
     # if the search criteria is too short, display an error and don't do anything
-    if (strlen(trim($search_for)) <= 1) {
+    if (strlen(trim($search_for)) < 1) {
         ExitWithException("Search criteria \"$search_for\" is too short.");
     }
 
@@ -267,7 +267,7 @@ if (isset($_POST['submit_button'])) {
     # Bible text used to search.
     # Each line follows the following format:
     # Book <one_space> Book#:Verse# <one_space> <verse (square brackets for italics)>
-    $bible_text = "KJV-Cambridge_UTF-8_notes_and_italics_removed_ule.txt";
+    $bible_text = "KJV-Cambridge_UTF-8_notes_and_italics_removed_psalmstitles_ule.txt";
 
     # expand book name abbreviations into their names in the bible text used to search
     # eg. ex => Exodus, gen => Genesis
@@ -488,9 +488,10 @@ function PartialMatchCaseInsensitive(&$partial_match_count, &$partial_match_resu
                             $new_line = str_replace("\n", "<br>", $new_line);
                         }
 
-                        foreach ($search_array as $word) {
-                            $new_line = HighlightNoTooltip($new_line, $word);
-                        }
+                        #foreach ($search_array as $word) {
+                        #    $new_line = HighlightNoTooltip($new_line, $word);
+                        #}
+                        $new_line = HighlightNoTooltip($new_line, $search_for);
 
                         $new_line = BoldBookName($new_line);
 
@@ -600,24 +601,24 @@ function CheckForConsecutiveSubstrings($needle, $haystack, &$replacement_count) 
 function HighlightNoTooltip($line, $term) {
 
     #TODO needs fixed and finished
-    return $line;
+    #return $line;
 
     # Don't highlight booknames
     # support for "Mt 20"
-    $checkterm = substr($term, 0, strpos($term, ' '));
+#    $checkterm = substr($term, 0, strpos($term, ' '));
     # support for "Mt", "mark"
-    if ($checkterm == '') { $checkterm = $term; }
+#    if ($checkterm == '') { $checkterm = $term; }
 
-    echo "checkterm: $checkterm<br>";
+#    echo "checkterm: $checkterm<br>";
 
-    $checkline = substr($line, 0, strlen($checkterm));
-    echo "subline:   ", substr($line, 0, strlen($checkterm)), "<br>";
+#    $checkline = substr($line, 0, strlen($checkterm));
+#    echo "subline:   ", substr($line, 0, strlen($checkterm)), "<br>";
 
-    if (IsABookName($checkterm)) {
-        if (IsABookName($checkline)) {
-            return $line;
-        }
-    }
+#    if (IsABookName($checkterm)) {
+#        if (IsABookName($checkline)) {
+#            return $line;
+#        }
+#    }
 
     $highlight = "<span class=\"highlight\">";
 
