@@ -328,9 +328,7 @@ if (isset($_POST['submit_button'])) {
             # exactly 1
             if ($partial_match_count == 1) {
                 echo "<br><hr><p id=\"partial_matches\">Found $partial_match_count partial word match for \"$search_for\"</p><hr>";
-            }
-            # More than 1
-            if ($partial_match_count > 1) {
+            } elseif ($partial_match_count > 1) {
                 echo "<br><hr><p id=\"partial_matches\">Found $partial_match_count partial word matches for \"$search_for\"</p><hr>";
             }
 
@@ -454,8 +452,9 @@ function PartialMatchCaseInsensitive(&$partial_match_count, &$partial_match_resu
             if ($debug) { $lines_checked += 1; }
 
             # Remove brackets originally used to indicate italics
-            $new_line = str_replace("[", "", $line);
-            $new_line = str_replace("]", "", $new_line);
+            #$new_line = str_replace("[", "", $line);
+            #$new_line = str_replace("]", "", $new_line);
+            $new_line = $line;
 
             # if line contains the exact pattern
             if (preg_match("/\b$search_for_preg_quoted\b/$case_sensitive", strip_tags($new_line)) === 1) {
@@ -476,9 +475,10 @@ function PartialMatchCaseInsensitive(&$partial_match_count, &$partial_match_resu
                         }
                     }
 
-                    # if the counter reaches the number of words for this line
                     # if all words have a partial match for this line it becomes a result to be shown
-                    if ($word_counter == $search_word_count) {
+                    #if ($word_counter >= $search_word_count) {
+                    # if one or more words have a partial match
+                    if ($word_counter >= 1) {
 
                         # replace newline (not visible as html) with a break (is visable as html)
                         # keep newlines during debugging (easier to read page source)
@@ -495,6 +495,7 @@ function PartialMatchCaseInsensitive(&$partial_match_count, &$partial_match_resu
 
                         $new_line = BoldBookName($new_line);
 
+                        #echo "partialmatchresults: $partial_match_results<br>";
                         $partial_match_results = $partial_match_results . $new_line;
 
                         # Increment the match counter by 1
@@ -600,44 +601,26 @@ function CheckForConsecutiveSubstrings($needle, $haystack, &$replacement_count) 
 
 function HighlightNoTooltip($line, $term) {
 
-    #TODO needs fixed and finished
-    #return $line;
+    $marker = 0;
 
-    # Don't highlight booknames
-    # support for "Mt 20"
-#    $checkterm = substr($term, 0, strpos($term, ' '));
-    # support for "Mt", "mark"
-#    if ($checkterm == '') { $checkterm = $term; }
+    $highlight_beg = "<span class=\"highlight\">";
+    $highlight_end = "</span>";
 
-#    echo "checkterm: $checkterm<br>";
+    $term_array = explode(" ", $term);
+    foreach($term_array as $highlight_term) {
+        if (is_null($highlight_term)) { continue; }
+        if (stripos($line, $highlight_term) === false) { continue; }
+        # get the position where the string to be highlighted begins
+        $term_beg = stripos($line, $highlight_term, $marker);
 
-#    $checkline = substr($line, 0, strlen($checkterm));
-#    echo "subline:   ", substr($line, 0, strlen($checkterm)), "<br>";
+        # get the position where the highlighting should end
+        $term_end = $term_beg + strlen($highlight_term) + strlen($highlight_beg);
 
-#    if (IsABookName($checkterm)) {
-#        if (IsABookName($checkline)) {
-#            return $line;
-#        }
-#    }
+        $marker = $term_end;
 
-    $highlight = "<span class=\"highlight\">";
-
-    #echo "Highlighting before: \"$term\" in \"$line\"<br>";
-
-    # get the position where the string to be highlighted begins
-    $term_beg = stripos(strip_tags($line), $term);
-
-    #echo "term_begin: $term_beg<br>$line<br>$term<br>";
-
-    # get the position where the highlighting should end
-    $term_end = $term_beg + strlen($term) + strlen($highlight);
-
-    #echo "term_end: $term_end<br>";
-
-    $line = substr_replace($line, $highlight, $term_beg, 0);
-    $line = substr_replace($line, "</span>", $term_end, 0);
-
-    #echo "Highlighting after: \"$term\" in \"$line\"<br>";
+        $line = substr_replace($line, $highlight_beg, $term_beg, 0);
+        $line = substr_replace($line, $highlight_end, $term_end, 0);
+    }
 
     return $line;
 }
@@ -817,6 +800,7 @@ function ExpandAbbreviatedBookNames($string_to_check) {
                               "ga" => "Galations",
                               "eph" => "Ephesians",
                               "ep" => "Ephesians",
+                              "phil" => "Philippians",
                               "phi" => "Philippians",
                               "col" => "Colossians",
                               "1ths" => "1 Thessalonians",
